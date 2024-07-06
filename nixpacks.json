@@ -13,6 +13,6 @@
             ]
         }
     },
-    "start": "python manage.py runserver 0.0.0.0:7162"
+    "start": "python manage.py runserver"
 
 }
