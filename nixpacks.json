@@ -1,43 +1,51 @@
-
 {
     "phases": {
-        "setup": {
-            "nixPkgs": [
-                "python3",
-                "nodejs-14_x",
-                "gcc"
-            ],
-            "nixOverlays": [
-                "https://github.com/railwayapp/nix-npm-overlay/archive/main.tar.gz"
-            ],
-            "aptPkgs": [
-                "curl",
-                "wget"
-            ]
-        },
-        "install": {
-            "dependsOn": ["setup"],
-            "cmds": [
-                "pip install -r requirements.txt",
-                "npm install"
-            ],
-            "cacheDirectories": [
-                "/root/.npm"
-            ]
-        },
-        "build": {
-            "dependsOn": ["install"],
-            "cmds": [
-                "npm run build",
-                "python manage.py collectstatic --noinput"
-            ],
-            "cacheDirectories": [
-                "node_modules/.cache"
-            ]
-        }
+      "setup": {
+        "nixPkgs": [
+          "python3",
+          "nodejs-14_x",
+          "gcc"
+        ],
+        "nixOverlays": [
+          "https://github.com/railwayapp/nix-npm-overlay/archive/main.tar.gz"
+        ],
+        "aptPkgs": [
+          "curl",
+          "wget"
+        ]
+      },
+      "install": {
+        "dependsOn": ["setup"],
+        "cmds": [
+          "pip install -r requirements.txt",
+          "npm install"
+        ],
+        "cacheDirectories": [
+          "/root/.npm"
+        ]
+      },
+      "build": {
+        "dependsOn": ["install"],
+        "cmds": [
+          "npm run build",
+          "python manage.py collectstatic --noinput"
+        ],
+        "cacheDirectories": [
+          "node_modules/.cache"
+        ]
+      }
     },
     "start": {
-        "cmd": "python manage.py migrate && python manage.py runserver 0.0.0.0:7162"
+      "cmd": "python manage.py migrate && python manage.py runserver 0.0.0.0:7162",
+      "dependsOn": ["build"]
+    },
+    "docker": {
+      "healthcheck": {
+        "test": ["CMD-SHELL", "curl -f http://localhost:7162/ || exit 1"],
+        "interval": "30s",
+        "timeout": "10s",
+        "retries": 3
+      }
     }
-
-}
+  }
+  
