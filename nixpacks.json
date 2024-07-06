@@ -13,6 +13,8 @@
             ]
         }
     },
-    "start": "python manage.py runserver"
+    "start": {
+        "cmds": "python manage.py runserver"
+    }
 
 }
