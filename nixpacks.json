@@ -1,20 +1,43 @@
+
 {
     "phases": {
+        "setup": {
+            "nixPkgs": [
+                "python3",
+                "nodejs-14_x"
+            ],
+            "nixOverlays": [
+                "https://github.com/railwayapp/nix-npm-overlay/archive/main.tar.gz"
+            ],
+            "aptPkgs": [
+                "curl",
+                "wget"
+            ]
+        },
         "install": {
+            "dependsOn": ["setup"],
             "cmds": [
                 "pip install -r requirements.txt",
                 "npm install"
+            ],
+            "cacheDirectories": [
+                "/root/.npm"
             ]
         },
         "build": {
+            "dependsOn": ["install"],
             "cmds": [
+                "npm run build",
                 "python manage.py migrate",
                 "python manage.py collectstatic --noinput"
+            ],
+            "cacheDirectories": [
+                "node_modules/.cache"
             ]
         }
     },
     "start": {
-        "cmds": "python manage.py runserver"
+        "cmd": "python manage.py runserver 0.0.0.0:7162"
     }
 
 }
