@@ -1,0 +1,17 @@
+{
+    "phases": {
+        "install": {
+            "cmds": [
+                "pip install -r requirements.txt",
+                "npm install"
+            ]
+        },
+        "build": {
+            "cmds": [
+                "python manage.py collectstatic --noinput"
+            ]
+        }
+    },
+    "start": "python manage.py migrate && python manage.py runserver 0.0.0.0:7162"
+
+}
