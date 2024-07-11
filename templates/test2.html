@@ -1,0 +1,57 @@
+{% extends 'base2.html' %}
+
+{% block title %}Edit Letter{% endblock title %}
+{% block body %}
+<div class="container">
+   <center> <h2>Letter of Recommendation</h2> </center>
+
+    
+
+    <div id='whole_file'>
+        <form method="POST" , action="/final">
+            <div contenteditable="true" name="textbox" id="textbox">
+                {{letter | safe}}
+                
+            </div>
+
+  
+
+    
+
+
+    <input name="roll" value="{{student.std.roll_number}}" type="hidden">
+    <!-- <textarea name="textarea" id="textarea" hidden="true"></textarea>  -->
+
+    <textarea name="textarea1" id="textarea1" hidden="true"></textarea>
+    <textarea name="textarea2" id="textarea2" hidden="true"></textarea>
+    <textarea name="textarea3" id="textarea3" hidden="true"></textarea>
+
+
+
+    <div class="button">
+        <input type="submit" id="btn" value="Submit" onclick="Exchangevalue()">
+    </div>
+    </form>
+  </div>
+</div>
+<script>
+    // var textbox= document.getElementById("textbox");
+    // var textbox1= document.getElementById("1");
+    // var textbox2= document.getElementById("2");
+    // var textbox3= document.getElementById("3");
+    var container = document.getElementById('whole_file')
+
+
+    function Exchangevalue() {
+        // var textarea= document.getElementById("textarea");
+        // textarea.value=textbox.innerText;
+        // console.log(textarea.value);
+        var textarea1 = document.getElementById("textarea1");
+        textarea1.value = container.innerText;
+        // var textarea2= document.getElementById("textarea2");
+        // textarea2.value=textbox2.innerText;
+        // var textarea3= document.getElementById("textarea3");
+        // textarea3.value=textbox3.innerText;
+    };
+</script>
+{% endblock body %}

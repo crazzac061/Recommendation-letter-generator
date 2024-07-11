@@ -1,0 +1,149 @@
+{% extends 'base2.html' %}
+
+{% block title %}Create Template{% endblock title %}
+
+{% block raw %}
+    <script src="https://cdn.tiny.cloud/1/zv5jgyybldk6c4dkqb0hqzfykj2etmpab2j6s6hpne21u93o/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    <script>
+    tinymce.init({
+        selector: 'textarea#editor',
+        plugins: 'code',
+        toolbar: 'bold italic | ifelse | shortcode | code',
+        setup: function (editor) {
+            
+            editor.on('keydown', function(e) {
+            if (e.keyCode === 13 && !e.shiftKey) { // Enter key without Shift
+                e.preventDefault(); // Prevent default newline behavior
+
+                // Insert <p><br> at the current caret position
+                editor.selection.setContent('<p><br></p>', { format: 'raw' });
+            }
+        });
+
+
+            // Add a custom button for if-else conditions
+            editor.ui.registry.addButton('ifelse', {
+                text: 'If-Else',
+                onAction: function () {
+                    editor.windowManager.open({
+                        title: 'Insert If-Else Condition',
+                        body: {
+                            type: 'panel',
+                            items: [
+                                {
+                                    type: 'input',
+                                    name: 'condition',
+                                    label: 'Condition',
+                                    placeholder: 'e.g., student.is_pro == "Yes"',
+                                },
+                                {
+                                    type: 'textarea',
+                                    name: 'trueContent',
+                                    label: 'If True Content',
+                                    placeholder: 'Content if the condition is true',
+                                },
+                                {
+                                    type: 'textarea',
+                                    name: 'falseContent',
+                                    label: 'If False Content',
+                                    placeholder: 'Content if the condition is false',
+                                }
+                            ]
+                        },
+                        buttons: [
+                            {
+                                type: 'cancel',
+                                text: 'Close'
+                            },
+                            {
+                                type: 'submit',
+                                text: 'Insert',
+                                primary: true
+                            }
+                        ],
+                        onSubmit: function (api) {
+                            const data = api.getData();
+                            const djangoTemplate = `{{"{% if"}} "${data.condition}" %}${data.trueContent}{{'{%'}} else {{ '%}' }}${data.falseContent} {{'{%'}} endif {{ '%}' }}`;
+                            editor.insertContent(djangoTemplate);
+                            api.close();
+                        }
+                    });
+                }
+            });
+
+            // Add a custom button for placeholders
+            editor.ui.registry.addButton('shortcode', {
+                text: 'Insert Placeholder',
+                onAction: function () {
+                    editor.windowManager.open({
+                        title: 'Insert Placeholder',
+                        body: {
+                            type: 'panel',
+                            items: [
+                                {
+                                    type: 'selectbox',
+                                    name: 'placeholder',
+                                    label: 'Placeholder',
+                                    items: [
+                                        { text: 'Student Name', value: "{{ '{{' }} student.name  }}" },
+                                        { text: 'Years Taught', value: '{{"{{"}} student.years_taught }}' },
+                                        { text: 'Program', value: '{{"{{"}} student.std.program }}' },
+                                        { text: 'Professor Name', value: '{{"{{"}} student.professor.name }}' },
+                                        { text: 'Professor Title', value: '{{"{{"}} student.professor.title }}' },
+                                        { text: 'Professor Department', value: '{{"{{"}} student.professor.department }}' },
+                                        { text: 'Professor Phone', value: '{{"{{"}} student.professor.phone }}' },
+                                        { text: 'Professor Email', value: '{{"{{"}} student.professor.email }}' }, 
+                                        // Add more placeholders as needed
+                                    ]
+                                }
+                            ]
+                        },
+                        buttons: [
+                            {
+                                type: 'cancel',
+                                text: 'Close'
+                            },
+                            {
+                                type: 'submit',
+                                text: 'Insert',
+                                primary: true
+                            }
+                        ],
+                        onSubmit: function (api) {
+                            const data = api.getData();
+                            editor.insertContent(data.placeholder);
+                            api.close();
+                        }
+                    });
+                }
+            });
+        }
+    });
+    </script>
+{% endblock raw %}
+
+{% block body %}
+    <h1>Create Recommendation Letter Template</h1>
+    <form action="/getTemplate" method="post">
+
+        <div class="user-details">
+            <!-- <div class="input-box">
+              <span class="details">Requesting University</span>
+              <input type="text" placeholder="University Name" name="university" required>
+            </div> -->
+            <div class="input-box">
+              <span class="details">Template Name</span>
+              <input type="text" placeholder="Template Name" name="templateName" required>
+            </div>
+        </div>
+        <textarea id="editor" name="content"></textarea>
+        
+        <div  style="width: 200px; text-align: center;">
+            <div class = 'button'>
+                <input type="submit" value = " Save Template " />
+            </div>
+
+        </div>
+        
+    </form>
+{% endblock body %}
