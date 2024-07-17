@@ -3,6 +3,7 @@
 {% block title %}Create Template{% endblock title %}
 
 {% block raw %}
+
     <script src="https://cdn.tiny.cloud/1/zv5jgyybldk6c4dkqb0hqzfykj2etmpab2j6s6hpne21u93o/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
     tinymce.init({
@@ -19,6 +20,37 @@
                 editor.selection.setContent('<p><br></p>', { format: 'raw' });
             }
         });
+            
+        const placeholderItems = [
+            { text: 'Quality Recommend', value: "{{ '{{' }} quality.recommend }}" },
+            { text: 'Student Name', value: "{{ '{{' }} student.name }}" },
+            { text: 'First Name', value: "{{ '{{' }} firstname }}" },
+            { text: 'Years Taught', value: "{{ '{{' }} student.years_taught }}" },
+            { text: 'Program', value: "{{ '{{' }} student.std.program }}" },
+            { text: 'Is Pro', value: "{{ '{{' }} student.is_pro }}" },
+            { text: 'Value', value: "{{ '{{' }} value }}" },
+            { text: 'Subject', value: "{{ '{{' }} subject }}" },
+            { text: 'Quality', value: "{{ '{{' }} quality.quality }}" },
+            { text: 'Tentative Ranking', value: "{{ '{{' }} academics.tentative_ranking }}" },
+            { text: 'Final Project', value: "{{ '{{' }} project.final_project }}" },
+            { text: 'Is Paper', value: "{{ '{{' }} student.is_paper }}" },
+            { text: 'Paper Title', value: "{{ '{{' }} paper.paper_title }}" },
+            { text: 'Presentation', value: "{{ '{{' }} quality.presentation }}" },
+            { text: 'Leadership', value: "{{ '{{' }} quality.leadership }}" },
+            { text: 'Teamwork', value: "{{ '{{' }} quality.teamwork }}" },
+            { text: 'Hardworking', value: "{{ '{{' }} quality.hardworking }}" },
+            { text: 'Friendly', value: "{{ '{{' }} quality.friendly }}" },
+            { text: 'Social', value: "{{ '{{' }} quality.social }}" },
+            { text: 'ECA', value: "{{ '{{' }} quality.eca }}" },
+            { text: 'Deployed', value: "{{ '{{' }} project.deployed }}" },
+            { text: 'Intern', value: "{{ '{{' }} student.intern }}" },
+            { text: 'Professor Name', value: "{{ '{{' }} student.professor.name }}" },
+            { text: 'Professor Title', value: "{{ '{{' }} student.professor.title }}" },
+            { text: 'Professor Department', value: "{{ '{{' }} student.professor.department }}" },
+            { text: 'Professor Phone', value: "{{ '{{' }} student.professor.phone }}" },
+            { text: 'Professor Email', value: "{{ '{{' }} student.professor.email }}" }
+        ];
+
 
 
             // Add a custom button for if-else conditions
@@ -30,11 +62,23 @@
                         body: {
                             type: 'panel',
                             items: [
+                                {  type: 'selectbox',
+                                    name: 'placeholder',
+                                    label: 'Choose Placeholder',
+                                    items: placeholderItems
+                                                                   
+                                },
                                 {
                                     type: 'input',
                                     name: 'condition',
                                     label: 'Condition',
                                     placeholder: 'e.g., student.is_pro == "Yes"',
+                                },
+                                {
+                                    type: 'button',
+                                    text: 'Insert Placeholder',
+                                    name: 'conditionPlaceholder',
+
                                 },
                                 {
                                     type: 'textarea',
@@ -43,11 +87,23 @@
                                     placeholder: 'Content if the condition is true',
                                 },
                                 {
+                                    type: 'button',
+                                    text: 'Insert Placeholder',
+                                    name: 'truePlaceholder',
+
+                                },
+                                {
                                     type: 'textarea',
                                     name: 'falseContent',
                                     label: 'If False Content',
                                     placeholder: 'Content if the condition is false',
-                                }
+                                },
+                                {
+                                    type: 'button',
+                                    text: 'Insert Placeholder',
+                                    name: 'falsePlaceholder',
+
+                                },
                             ]
                         },
                         buttons: [
@@ -59,14 +115,35 @@
                                 type: 'submit',
                                 text: 'Insert',
                                 primary: true
-                            }
+                            },
                         ],
+                        size: 'medium',
                         onSubmit: function (api) {
                             const data = api.getData();
                             const djangoTemplate = `{{"{% if"}} "${data.condition}" %}${data.trueContent}{{'{%'}} else {{ '%}' }}${data.falseContent} {{'{%'}} endif {{ '%}' }}`;
                             editor.insertContent(djangoTemplate);
                             api.close();
-                        }
+                        },
+
+                        //add placeholoder in the if-else condition field
+                        onAction: (api, details) => {
+                            if (details.name === 'conditionPlaceholder') {
+                                const data = api.getData();
+                                data.condition += data.placeholder;
+                                api.setData(data);
+                            }
+                            if (details.name === 'truePlaceholder') {
+                                const data = api.getData();
+                                data.trueContent += data.placeholder;
+                                api.setData(data);
+                            }
+                            if (details.name === 'falsePlaceholder') {
+                                const data = api.getData();
+                                data.falseContent += data.placeholder;
+                                api.setData(data);
+                            }
+                            
+                        },
                     });
                 }
             });
@@ -85,15 +162,33 @@
                                     name: 'placeholder',
                                     label: 'Placeholder',
                                     items: [
-                                        { text: 'Student Name', value: "{{ '{{' }} student.name  }}" },
-                                        { text: 'Years Taught', value: '{{"{{"}} student.years_taught }}' },
-                                        { text: 'Program', value: '{{"{{"}} student.std.program }}' },
-                                        { text: 'Professor Name', value: '{{"{{"}} student.professor.name }}' },
-                                        { text: 'Professor Title', value: '{{"{{"}} student.professor.title }}' },
-                                        { text: 'Professor Department', value: '{{"{{"}} student.professor.department }}' },
-                                        { text: 'Professor Phone', value: '{{"{{"}} student.professor.phone }}' },
-                                        { text: 'Professor Email', value: '{{"{{"}} student.professor.email }}' }, 
-                                        // Add more placeholders as needed
+                                    { text: 'Quality Recommend', value: "{{ '{{' }} quality.recommend }}" },
+                                    { text: 'Student Name', value: "{{ '{{' }} student.name }}" },
+                                    { text: 'First Name', value: "{{ '{{' }} firstname }}" },
+                                    { text: 'Years Taught', value: "{{ '{{' }} student.years_taught }}" },
+                                    { text: 'Program', value: "{{ '{{' }} student.std.program }}" },
+                                    { text: 'Is Pro', value: "{{ '{{' }} student.is_pro }}" },
+                                    { text: 'Value', value: "{{ '{{' }} value }}" },
+                                    { text: 'Subject', value: "{{ '{{' }} subject }}" },
+                                    { text: 'Quality', value: "{{ '{{' }} quality.quality }}" },
+                                    { text: 'Tentative Ranking', value: "{{ '{{' }} academics.tentative_ranking }}" },
+                                    { text: 'Final Project', value: "{{ '{{' }} project.final_project }}" },
+                                    { text: 'Is Paper', value: "{{ '{{' }} student.is_paper }}" },
+                                    { text: 'Paper Title', value: "{{ '{{' }} paper.paper_title }}" },
+                                    { text: 'Presentation', value: "{{ '{{' }} quality.presentation }}" },
+                                    { text: 'Leadership', value: "{{ '{{' }} quality.leadership }}" },
+                                    { text: 'Teamwork', value: "{{ '{{' }} quality.teamwork }}" },
+                                    { text: 'Hardworking', value: "{{ '{{' }} quality.hardworking }}" },
+                                    { text: 'Friendly', value: "{{ '{{' }} quality.friendly }}" },
+                                    { text: 'Social', value: "{{ '{{' }} quality.social }}" },
+                                    { text: 'ECA', value: "{{ '{{' }} quality.eca }}" },
+                                    { text: 'Deployed', value: "{{ '{{' }} project.deployed }}" },
+                                    { text: 'Intern', value: "{{ '{{' }} student.intern }}" },
+                                    { text: 'Professor Name', value: "{{ '{{' }} student.professor.name }}" },
+                                    { text: 'Professor Title', value: "{{ '{{' }} student.professor.title }}" },
+                                    { text: 'Professor Department', value: "{{ '{{' }} student.professor.department }}" },
+                                    { text: 'Professor Phone', value: "{{ '{{' }} student.professor.phone }}" },
+                                    { text: 'Professor Email', value: "{{ '{{' }} student.professor.email }}" }
                                     ]
                                 }
                             ]
@@ -123,8 +218,9 @@
 {% endblock raw %}
 
 {% block body %}
-    <h1>Create Recommendation Letter Template</h1>
-    <form action="/getTemplate" method="post">
+<div style="width: 90%; align-self: center;">
+    <h3>Create Recommendation Letter Template</h3>
+    <form action="/getTemplate" method="post" >
 
         <div class="user-details">
             <!-- <div class="input-box">
@@ -136,7 +232,7 @@
               <input type="text" placeholder="Template Name" name="templateName" required>
             </div>
         </div>
-        <textarea id="editor" name="content"></textarea>
+        <textarea id="editor" name="content" ></textarea>
         
         <div  style="width: 200px; text-align: center;">
             <div class = 'button'>
@@ -146,4 +242,5 @@
         </div>
         
     </form>
+</div>
 {% endblock body %}

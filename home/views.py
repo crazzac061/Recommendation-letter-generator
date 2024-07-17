@@ -1505,7 +1505,7 @@ def renderCustom(request):
         from jinja2 import Template
 
 
-        template = get_object_or_404(CustomTemplates, pk=2)
+        template = get_object_or_404(CustomTemplates, pk=6)
 
         jinja_template = Template(template.template)
 
@@ -1554,7 +1554,8 @@ def getTemplate(request):
         content = request.POST.get("content")
         name = request.POST.get("templateName")
         teacher = TeacherInfo.objects.get(unique_id= '12345')
-        print(content)
+        content = content.replace('<p>&nbsp;</p>', '')
+        content = content.replace('<p>', '<p><br>')
 
         template = CustomTemplates(template_name =  name, template=content, professor = teacher)
         template.save()
