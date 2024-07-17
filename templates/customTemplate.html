@@ -1,249 +1,326 @@
-{% extends 'base2.html' %}
-
-{% block title %}Create Template{% endblock title %}
-
+{% extends 'base2.html' %} {% block title %}Create Template{% endblock title %}
 {% block raw %}
-    <script src="https://cdn.tiny.cloud/1/zv5jgyybldk6c4dkqb0hqzfykj2etmpab2j6s6hpne21u93o/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
-    <script>
-    tinymce.init({
-        selector: 'textarea#editor',
-        plugins: 'code',
-        toolbar: 'bold italic | ifelse | shortcode | code',
-        setup: function (editor) {
-            
-            editor.on('keydown', function(e) {
-            if (e.keyCode === 13 && !e.shiftKey) { // Enter key without Shift
-                e.preventDefault(); // Prevent default newline behavior
+<script
+  src="https://cdn.tiny.cloud/1/zv5jgyybldk6c4dkqb0hqzfykj2etmpab2j6s6hpne21u93o/tinymce/7/tinymce.min.js"
+  referrerpolicy="origin"
+></script>
+<script>
+  tinymce.init({
+    selector: "textarea#editor",
+    plugins: "code",
+    toolbar: "bold italic | ifelse | shortcode | code",
+    setup: function (editor) {
+      editor.on("keydown", function (e) {
+        if (e.keyCode === 13 && !e.shiftKey) {
+          // Enter key without Shift
+          e.preventDefault(); // Prevent default newline behavior
 
-                // Insert <p><br> at the current caret position
-                editor.selection.setContent('<p><br></p>', { format: 'raw' });
-            }
-        });
-            
-        const placeholderItems = [
-            { text: 'Quality Recommend', value: "{{ '{{' }} quality.recommend }}" },
-            { text: 'Student Name', value: "{{ '{{' }} student.name }}" },
-            { text: 'First Name', value: "{{ '{{' }} firstname }}" },
-            { text: 'Years Taught', value: "{{ '{{' }} student.years_taught }}" },
-            { text: 'Program', value: "{{ '{{' }} student.std.program }}" },
-            { text: 'Is Pro', value: "{{ '{{' }} student.is_pro }}" },
-            { text: 'Value', value: "{{ '{{' }} value }}" },
-            { text: 'Subject', value: "{{ '{{' }} subject }}" },
-            { text: 'Quality', value: "{{ '{{' }} quality.quality }}" },
-            { text: 'Tentative Ranking', value: "{{ '{{' }} academics.tentative_ranking }}" },
-            { text: 'Final Project', value: "{{ '{{' }} project.final_project }}" },
-            { text: 'Is Paper', value: "{{ '{{' }} student.is_paper }}" },
-            { text: 'Paper Title', value: "{{ '{{' }} paper.paper_title }}" },
-            { text: 'Presentation', value: "{{ '{{' }} quality.presentation }}" },
-            { text: 'Leadership', value: "{{ '{{' }} quality.leadership }}" },
-            { text: 'Teamwork', value: "{{ '{{' }} quality.teamwork }}" },
-            { text: 'Hardworking', value: "{{ '{{' }} quality.hardworking }}" },
-            { text: 'Friendly', value: "{{ '{{' }} quality.friendly }}" },
-            { text: 'Social', value: "{{ '{{' }} quality.social }}" },
-            { text: 'ECA', value: "{{ '{{' }} quality.eca }}" },
-            { text: 'Deployed', value: "{{ '{{' }} project.deployed }}" },
-            { text: 'Intern', value: "{{ '{{' }} student.intern }}" },
-            { text: 'Professor Name', value: "{{ '{{' }} student.professor.name }}" },
-            { text: 'Professor Title', value: "{{ '{{' }} student.professor.title }}" },
-            { text: 'Professor Department', value: "{{ '{{' }} student.professor.department }}" },
-            { text: 'Professor Phone', value: "{{ '{{' }} student.professor.phone }}" },
-            { text: 'Professor Email', value: "{{ '{{' }} student.professor.email }}" }
-        ];
-
-
-
-            // Add a custom button for if-else conditions
-            editor.ui.registry.addButton('ifelse', {
-                text: 'If-Else',
-                onAction: function () {
-                    editor.windowManager.open({
-                        title: 'Insert If-Else Condition',
-                        body: {
-                            type: 'panel',
-                            items: [
-                                {  type: 'selectbox',
-                                    name: 'placeholder',
-                                    label: 'Choose Placeholder',
-                                    items: placeholderItems
-                                                                   
-                                },
-                                {
-                                    type: 'input',
-                                    name: 'condition',
-                                    label: 'Condition',
-                                    placeholder: 'e.g., student.is_pro == "Yes"',
-                                },
-                                {
-                                    type: 'button',
-                                    text: 'Insert Placeholder',
-                                    name: 'conditionPlaceholder',
-
-                                },
-                                {
-                                    type: 'textarea',
-                                    name: 'trueContent',
-                                    label: 'If True Content',
-                                    placeholder: 'Content if the condition is true',
-                                },
-                                {
-                                    type: 'button',
-                                    text: 'Insert Placeholder',
-                                    name: 'truePlaceholder',
-
-                                },
-                                {
-                                    type: 'textarea',
-                                    name: 'falseContent',
-                                    label: 'If False Content',
-                                    placeholder: 'Content if the condition is false',
-                                },
-                                {
-                                    type: 'button',
-                                    text: 'Insert Placeholder',
-                                    name: 'falsePlaceholder',
-
-                                },
-                            ]
-                        },
-                        buttons: [
-                            {
-                                type: 'cancel',
-                                text: 'Close'
-                            },
-                            {
-                                type: 'submit',
-                                text: 'Insert',
-                                primary: true
-                            },
-                        ],
-                        size: 'medium',
-                        onSubmit: function (api) {
-                            const data = api.getData();
-                            const djangoTemplate = `{{"{% if"}} "${data.condition}" %}${data.trueContent}{{'{%'}} else {{ '%}' }}${data.falseContent} {{'{%'}} endif {{ '%}' }}`;
-                            editor.insertContent(djangoTemplate);
-                            api.close();
-                        },
-
-                        //add placeholoder in the if-else condition field
-                        onAction: (api, details) => {
-                            if (details.name === 'conditionPlaceholder') {
-                                const data = api.getData();
-                                data.condition += data.placeholder;
-                                api.setData(data);
-                            }
-                            if (details.name === 'truePlaceholder') {
-                                const data = api.getData();
-                                data.trueContent += data.placeholder;
-                                api.setData(data);
-                            }
-                            if (details.name === 'falsePlaceholder') {
-                                const data = api.getData();
-                                data.falseContent += data.placeholder;
-                                api.setData(data);
-                            }
-                            
-                        },
-                    });
-                }
-            });
-
-            // Add a custom button for placeholders
-            editor.ui.registry.addButton('shortcode', {
-                text: 'Insert Placeholder',
-                onAction: function () {
-                    editor.windowManager.open({
-                        title: 'Insert Placeholder',
-                        body: {
-                            type: 'panel',
-                            items: [
-                                {
-                                    type: 'selectbox',
-                                    name: 'placeholder',
-                                    label: 'Placeholder',
-                                    items: [
-                                    { text: 'Quality Recommend', value: "{{ '{{' }} quality.recommend }}" },
-                                    { text: 'Student Name', value: "{{ '{{' }} student.name }}" },
-                                    { text: 'First Name', value: "{{ '{{' }} firstname }}" },
-                                    { text: 'Years Taught', value: "{{ '{{' }} student.years_taught }}" },
-                                    { text: 'Program', value: "{{ '{{' }} student.std.program }}" },
-                                    { text: 'Is Pro', value: "{{ '{{' }} student.is_pro }}" },
-                                    { text: 'Value', value: "{{ '{{' }} value }}" },
-                                    { text: 'Subject', value: "{{ '{{' }} subject }}" },
-                                    { text: 'Quality', value: "{{ '{{' }} quality.quality }}" },
-                                    { text: 'Tentative Ranking', value: "{{ '{{' }} academics.tentative_ranking }}" },
-                                    { text: 'Final Project', value: "{{ '{{' }} project.final_project }}" },
-                                    { text: 'Is Paper', value: "{{ '{{' }} student.is_paper }}" },
-                                    { text: 'Paper Title', value: "{{ '{{' }} paper.paper_title }}" },
-                                    { text: 'Presentation', value: "{{ '{{' }} quality.presentation }}" },
-                                    { text: 'Leadership', value: "{{ '{{' }} quality.leadership }}" },
-                                    { text: 'Teamwork', value: "{{ '{{' }} quality.teamwork }}" },
-                                    { text: 'Hardworking', value: "{{ '{{' }} quality.hardworking }}" },
-                                    { text: 'Friendly', value: "{{ '{{' }} quality.friendly }}" },
-                                    { text: 'Social', value: "{{ '{{' }} quality.social }}" },
-                                    { text: 'ECA', value: "{{ '{{' }} quality.eca }}" },
-                                    { text: 'Deployed', value: "{{ '{{' }} project.deployed }}" },
-                                    { text: 'Intern', value: "{{ '{{' }} student.intern }}" },
-                                    { text: 'Professor Name', value: "{{ '{{' }} student.professor.name }}" },
-                                    { text: 'Professor Title', value: "{{ '{{' }} student.professor.title }}" },
-                                    { text: 'Professor Department', value: "{{ '{{' }} student.professor.department }}" },
-                                    { text: 'Professor Phone', value: "{{ '{{' }} student.professor.phone }}" },
-                                    { text: 'Professor Email', value: "{{ '{{' }} student.professor.email }}" }
-                                    ]
-                                }
-                            ]
-                        },
-                        buttons: [
-                            {
-                                type: 'cancel',
-                                text: 'Close'
-                            },
-                            {
-                                type: 'submit',
-                                text: 'Insert',
-                                primary: true
-                            }
-                        ],
-                        onSubmit: function (api) {
-                            const data = api.getData();
-                            editor.insertContent(data.placeholder);
-                            api.close();
-                        }
-                    });
-                }
-            });
+          // Insert <p><br> at the current caret position
+          editor.selection.setContent("<p><br></p>", { format: "raw" });
         }
-    });
-    </script>
-{% endblock raw %}
+      });
 
-{% block body %}
+      const placeholderItems = [
+        { text: "Quality Recommend", value: "{{ '{{' }} quality.recommend }}" },
+        { text: "Student Name", value: "{{ '{{' }} student.name }}" },
+        { text: "First Name", value: "{{ '{{' }} firstname }}" },
+        { text: "Years Taught", value: "{{ '{{' }} student.years_taught }}" },
+        { text: "Program", value: "{{ '{{' }} student.std.program }}" },
+        { text: "Is Pro", value: "{{ '{{' }} student.is_pro }}" },
+        { text: "Value", value: "{{ '{{' }} value }}" },
+        { text: "Subject", value: "{{ '{{' }} subject }}" },
+        { text: "Quality", value: "{{ '{{' }} quality.quality }}" },
+        {
+          text: "Tentative Ranking",
+          value: "{{ '{{' }} academics.tentative_ranking }}",
+        },
+        { text: "Final Project", value: "{{ '{{' }} project.final_project }}" },
+        { text: "Is Paper", value: "{{ '{{' }} student.is_paper }}" },
+        { text: "Paper Title", value: "{{ '{{' }} paper.paper_title }}" },
+        { text: "Presentation", value: "{{ '{{' }} quality.presentation }}" },
+        { text: "Leadership", value: "{{ '{{' }} quality.leadership }}" },
+        { text: "Teamwork", value: "{{ '{{' }} quality.teamwork }}" },
+        { text: "Hardworking", value: "{{ '{{' }} quality.hardworking }}" },
+        { text: "Friendly", value: "{{ '{{' }} quality.friendly }}" },
+        { text: "Social", value: "{{ '{{' }} quality.social }}" },
+        { text: "ECA", value: "{{ '{{' }} quality.eca }}" },
+        { text: "Deployed", value: "{{ '{{' }} project.deployed }}" },
+        { text: "Intern", value: "{{ '{{' }} student.intern }}" },
+        {
+          text: "Professor Name",
+          value: "{{ '{{' }} student.professor.name }}",
+        },
+        {
+          text: "Professor Title",
+          value: "{{ '{{' }} student.professor.title }}",
+        },
+        {
+          text: "Professor Department",
+          value: "{{ '{{' }} student.professor.department }}",
+        },
+        {
+          text: "Professor Phone",
+          value: "{{ '{{' }} student.professor.phone }}",
+        },
+        {
+          text: "Professor Email",
+          value: "{{ '{{' }} student.professor.email }}",
+        },
+      ];
+
+      // Add a custom button for if-else conditions
+      editor.ui.registry.addButton("ifelse", {
+        text: "If-Else",
+        onAction: function () {
+          editor.windowManager.open({
+            title: "Insert If-Else Condition",
+            body: {
+              type: "panel",
+              items: [
+                {
+                  type: "selectbox",
+                  name: "placeholder",
+                  label: "Choose Placeholder",
+                  items: placeholderItems,
+                },
+                {
+                  type: "input",
+                  name: "condition",
+                  label: "Condition",
+                  placeholder: 'e.g., student.is_pro == "Yes"',
+                },
+                {
+                  type: "button",
+                  text: "Insert Placeholder",
+                  name: "conditionPlaceholder",
+                },
+                {
+                  type: "textarea",
+                  name: "trueContent",
+                  label: "If True Content",
+                  placeholder: "Content if the condition is true",
+                },
+                {
+                  type: "button",
+                  text: "Insert Placeholder",
+                  name: "truePlaceholder",
+                },
+                {
+                  type: "textarea",
+                  name: "falseContent",
+                  label: "If False Content",
+                  placeholder: "Content if the condition is false",
+                },
+                {
+                  type: "button",
+                  text: "Insert Placeholder",
+                  name: "falsePlaceholder",
+                },
+              ],
+            },
+            buttons: [
+              {
+                type: "cancel",
+                text: "Close",
+              },
+              {
+                type: "submit",
+                text: "Insert",
+                primary: true,
+              },
+            ],
+            size: "medium",
+            onSubmit: function (api) {
+              const data = api.getData();
+              const djangoTemplate = `{{"{% if"}} "${data.condition}" %}${data.trueContent}{{'{%'}} else {{ '%}' }}${data.falseContent} {{'{%'}} endif {{ '%}' }}`;
+              editor.insertContent(djangoTemplate);
+              api.close();
+            },
+
+            //add placeholoder in the if-else condition field
+            onAction: (api, details) => {
+              if (details.name === "conditionPlaceholder") {
+                const data = api.getData();
+                data.condition += data.placeholder;
+                api.setData(data);
+              }
+              if (details.name === "truePlaceholder") {
+                const data = api.getData();
+                data.trueContent += data.placeholder;
+                api.setData(data);
+              }
+              if (details.name === "falsePlaceholder") {
+                const data = api.getData();
+                data.falseContent += data.placeholder;
+                api.setData(data);
+              }
+            },
+          });
+        },
+      });
+
+      // Add a custom button for placeholders
+      editor.ui.registry.addButton("shortcode", {
+        text: "Insert Placeholder",
+        onAction: function () {
+          editor.windowManager.open({
+            title: "Insert Placeholder",
+            body: {
+              type: "panel",
+              items: [
+                {
+                  type: "selectbox",
+                  name: "placeholder",
+                  label: "Placeholder",
+                  items: [
+                    {
+                      text: "Quality Recommend",
+                      value: "{{ '{{' }} quality.recommend }}",
+                    },
+                    {
+                      text: "Student Name",
+                      value: "{{ '{{' }} student.name }}",
+                    },
+                    { text: "First Name", value: "{{ '{{' }} firstname }}" },
+                    {
+                      text: "Years Taught",
+                      value: "{{ '{{' }} student.years_taught }}",
+                    },
+                    {
+                      text: "Program",
+                      value: "{{ '{{' }} student.std.program }}",
+                    },
+                    { text: "Is Pro", value: "{{ '{{' }} student.is_pro }}" },
+                    { text: "Value", value: "{{ '{{' }} value }}" },
+                    { text: "Subject", value: "{{ '{{' }} subject }}" },
+                    { text: "Quality", value: "{{ '{{' }} quality.quality }}" },
+                    {
+                      text: "Tentative Ranking",
+                      value: "{{ '{{' }} academics.tentative_ranking }}",
+                    },
+                    {
+                      text: "Final Project",
+                      value: "{{ '{{' }} project.final_project }}",
+                    },
+                    {
+                      text: "Is Paper",
+                      value: "{{ '{{' }} student.is_paper }}",
+                    },
+                    {
+                      text: "Paper Title",
+                      value: "{{ '{{' }} paper.paper_title }}",
+                    },
+                    {
+                      text: "Presentation",
+                      value: "{{ '{{' }} quality.presentation }}",
+                    },
+                    {
+                      text: "Leadership",
+                      value: "{{ '{{' }} quality.leadership }}",
+                    },
+                    {
+                      text: "Teamwork",
+                      value: "{{ '{{' }} quality.teamwork }}",
+                    },
+                    {
+                      text: "Hardworking",
+                      value: "{{ '{{' }} quality.hardworking }}",
+                    },
+                    {
+                      text: "Friendly",
+                      value: "{{ '{{' }} quality.friendly }}",
+                    },
+                    { text: "Social", value: "{{ '{{' }} quality.social }}" },
+                    { text: "ECA", value: "{{ '{{' }} quality.eca }}" },
+                    {
+                      text: "Deployed",
+                      value: "{{ '{{' }} project.deployed }}",
+                    },
+                    { text: "Intern", value: "{{ '{{' }} student.intern }}" },
+                    {
+                      text: "Professor Name",
+                      value: "{{ '{{' }} student.professor.name }}",
+                    },
+                    {
+                      text: "Professor Title",
+                      value: "{{ '{{' }} student.professor.title }}",
+                    },
+                    {
+                      text: "Professor Department",
+                      value: "{{ '{{' }} student.professor.department }}",
+                    },
+                    {
+                      text: "Professor Phone",
+                      value: "{{ '{{' }} student.professor.phone }}",
+                    },
+                    {
+                      text: "Professor Email",
+                      value: "{{ '{{' }} student.professor.email }}",
+                    },
+                  ],
+                },
+              ],
+            },
+            buttons: [
+              {
+                type: "cancel",
+                text: "Close",
+              },
+              {
+                type: "submit",
+                text: "Insert",
+                primary: true,
+              },
+            ],
+            onSubmit: function (api) {
+              const data = api.getData();
+              editor.insertContent(data.placeholder);
+              api.close();
+            },
+          });
+        },
+      });
+    },
+  });
+</script>
+{% endblock raw %} {% block body %}
 <div class="center-content">
-    <h3>Create Recommendation Letter Template</h3>
-    <form action="/getTemplate" method="post" >
-        <div class="user-details">
-            <div class="input-box">
-              <span class="details">Template Name</span>
-              <input type="text" placeholder="Template Name" name="templateName" required>
-            </div>
-        </div>
-        <textarea id="editor" name="content" ></textarea>
-        <div class="button-container">
-            <div class="button">
-                <input type="submit" value="Save Template" />
-            </div>
-        </div>
-    </form>
+  <h3>Create Recommendation Letter Template</h3>
+  <form action="/getTemplate" method="post">
+    <div class="user-details">
+      <div class="input-box">
+        <br />
+        <br />
+        <span class="details">Template Name : </span>
+        <input
+          type="text"
+          placeholder="Template Name"
+          name="templateName"
+          required
+        />
+      </div>
+
+      <br />
+      <span class="details2">Template Content : </span>
+    </div>
+    <textarea id="editor" name="content"></textarea>
+    <div class="button-container">
+      <div class="button">
+        <input type="submit" value="Save Template" />
+      </div>
+    </div>
+  </form>
 </div>
 
 <style>
-.center-content {
+  .center-content {
     width: 90%;
     margin: 0 auto;
     text-align: center;
-}
-.button-container {
+  }
+  .button-container {
     width: 200px;
     margin: 0 auto;
-}
+  }
 </style>
 {% endblock body %}
