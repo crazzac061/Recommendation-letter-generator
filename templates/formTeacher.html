@@ -269,13 +269,12 @@
 
         <div class="input-box">
           <span class="details">Choose Template</span>
-           <select name="prof" id="teacher" required>
-             <option>---</option>
-             <!-- {% for teacher in teachers %} -->
-             <!-- <option value="{{teacher.unique_id}}">{{teacher.name}} | {{teacher.unique_id}}</option> -->
-             <!-- {% endfor %} -->
+           <select name="temp" id="template" required>
+             {% for template in templates %}
+             <option value="{{template.template_name}}">{{template.template_name}}</option>
+             {% endfor %}
 
-             <option value = "default" >Default</option> <!-- Default Template -->
+             <!-- <option value = "default" >Default</option> Default Template -->
            </select>
          </div>
        
@@ -284,6 +283,11 @@
   <div class="input-box">
     <input type="hidden" value="{{roll}}" name="roll" readonly />
   </div>
+<!-- 
+  <div class="input-box">
+    <input type="hidden" value="{{student.professor}}" name="name" readonly />
+  </div> -->
+  
   <div class="button">
     <input type="submit" value="Submit" />
   </div>

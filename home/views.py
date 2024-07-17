@@ -417,6 +417,9 @@ def make_letter(request):
         quality = Qualities.objects.get(student__name=student.name)
         academics = Academics.objects.get(student__name=student.name)
         files = Files.objects.get(student__name=student.name)
+
+        templates = CustomTemplates.objects.filter(professor = student.professor)
+
         teacher_name = student.professor.name
 
         return render(
@@ -433,7 +436,7 @@ def make_letter(request):
                 "teacher": teacher_name,
                 "teacher_model": teacher_model,
                 "files": files, 
-
+                'templates': templates,
             },
         )
 
@@ -1443,6 +1446,7 @@ def renderCustom(request):
         friendly = request.POST.get('quality5')
 
         recommend = request.POST.get('recommend')
+        template_name = request.POST.get('temp')
 
         stu_info = StudentData.objects.get(std__roll_number=roll)
 
@@ -1504,7 +1508,7 @@ def renderCustom(request):
         from jinja2 import Template
 
 
-        template = get_object_or_404(CustomTemplates, pk=6)
+        template = get_object_or_404(CustomTemplates, template_name = template_name)
 
         jinja_template = Template(template.template)
 
@@ -1546,14 +1550,20 @@ def renderCustom(request):
 
 def template(request):
     if request.method == "GET":
-        return render(request, "customTemplate.html")
+        
+        unique = request.COOKIES.get("unique")
+        teacher = TeacherInfo.objects.get(unique_id=unique)
+
+        return render(request, "customTemplate.html", {'professor':teacher})
     
 def getTemplate(request):
     if request.method == "POST":
         content = request.POST.get("content")
+        uid = request.POST.get("uid")
         name = request.POST.get("templateName")
-        teacher = TeacherInfo.objects.get(unique_id= '12345')
-        content = content.replace('<p>&nbsp;</p>', '')
+        teacher = TeacherInfo.objects.get(unique_id= uid)
+        content = content.replace('<p>&nbsp;</p>\n<p>&nbsp;</p>', '')
+        content = content.replace('</p><p>', '<br>')
         content = content.replace('<p>', '<p><br>')
 
         template = CustomTemplates(template_name =  name, template=content, professor = teacher)
