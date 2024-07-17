@@ -419,7 +419,6 @@ def make_letter(request):
         files = Files.objects.get(student__name=student.name)
         teacher_name = student.professor.name
 
-
         return render(
             request,
             "formTeacher.html",

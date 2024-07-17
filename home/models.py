@@ -152,8 +152,8 @@ class Academics(models.Model):
         db_table = 'Academics'
 
 class Files(models.Model):
-    transcript = models.ImageField(upload_to='transcript/', blank=True)
-    CV = models.ImageField(upload_to='cv/', blank=True)
+    transcript = models.FileField(upload_to='transcript/', blank=True)
+    CV = models.FileField(upload_to='cv/', blank=True)
     Photo = models.ImageField(upload_to='student_photo/', blank=True)
     student = models.ForeignKey(StudentData, on_delete= CASCADE)
     def __str__(self):

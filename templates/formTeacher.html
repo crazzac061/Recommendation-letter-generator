@@ -27,7 +27,14 @@
   <br />
   <br/>
   <!-- Button trigger modal -->
-  
+
+{% if files.transcript.url|lower|slice:'-4:' == '.pdf' %}
+  <!-- Display PDF in new tab -->
+  <a href="{{ files.transcript.url }}" class="btn btn-primary" ata-bs-toggle="modal" data-bs-target="#exampleModal1" target="_blank">
+    Show Transcript
+  </a>
+{% else %}
+
 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal1">
   Show transcript
 </button>
@@ -41,9 +48,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <img src="{{files.transcript.url}}" 
-        height="100%"
-        width="100%">
+
+          
+            <!-- Display image -->
+            <img src="{{ files.transcript.url }}" 
+            height="100%"
+            width="100%">
+          
+
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -51,32 +63,50 @@
     </div>
   </div>
 </div>
-  <br />
-  <br/>
-  <!-- Button trigger modal -->
-  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal2">
+
+{% endif %}
+
+<br />
+<br/>
+
+{% if files.CV.url|lower|slice:'-4:' == '.pdf' %}
+  <!-- Display PDF in new tab -->
+  <a href="{{ files.CV.url }}" class="btn btn-primary" ata-bs-toggle="modal" data-bs-target="#exampleModal1" target="_blank">
     Show CV
-  </button>
-  
-  <!-- Modal -->
-  <div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">CV</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <img src="{{files.CV.url}}" 
-          height="100%"
-          width="100%">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
+  </a>
+{% else %}
+
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal1">
+  Show CV
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Transcript</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+          
+            <!-- Display image -->
+            <img src="{{ files.CV.url }}" 
+            height="100%"
+            width="100%">
+          
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
+</div>
+
+{% endif %}
+
   <br />
   {% if student.paper == "Yes" %}
   <span class="details">Paper: <a target="_blank" href="{{paper.paper_link}}">{{paper.paper_title}}</a></span> <br />
@@ -236,6 +266,18 @@
             </label>
           </div>
         </div>
+
+        <div class="input-box">
+          <span class="details">Choose Template</span>
+           <select name="prof" id="teacher" required>
+             <option>---</option>
+             <!-- {% for teacher in teachers %} -->
+             <!-- <option value="{{teacher.unique_id}}">{{teacher.name}} | {{teacher.unique_id}}</option> -->
+             <!-- {% endfor %} -->
+
+             <option value = "default" >Default</option> <!-- Default Template -->
+           </select>
+         </div>
        
     </div> 
   

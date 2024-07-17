@@ -21,52 +21,35 @@
       });
 
       const placeholderItems = [
-        { text: "Quality Recommend", value: "{{ '{{' }} quality.recommend }}" },
-        { text: "Student Name", value: "{{ '{{' }} student.name }}" },
-        { text: "First Name", value: "{{ '{{' }} firstname }}" },
-        { text: "Years Taught", value: "{{ '{{' }} student.years_taught }}" },
-        { text: "Program", value: "{{ '{{' }} student.std.program }}" },
-        { text: "Is Pro", value: "{{ '{{' }} student.is_pro }}" },
-        { text: "Value", value: "{{ '{{' }} value }}" },
-        { text: "Subject", value: "{{ '{{' }} subject }}" },
-        { text: "Quality", value: "{{ '{{' }} quality.quality }}" },
-        {
-          text: "Tentative Ranking",
-          value: "{{ '{{' }} academics.tentative_ranking }}",
-        },
-        { text: "Final Project", value: "{{ '{{' }} project.final_project }}" },
-        { text: "Is Paper", value: "{{ '{{' }} student.is_paper }}" },
-        { text: "Paper Title", value: "{{ '{{' }} paper.paper_title }}" },
-        { text: "Presentation", value: "{{ '{{' }} quality.presentation }}" },
-        { text: "Leadership", value: "{{ '{{' }} quality.leadership }}" },
-        { text: "Teamwork", value: "{{ '{{' }} quality.teamwork }}" },
-        { text: "Hardworking", value: "{{ '{{' }} quality.hardworking }}" },
-        { text: "Friendly", value: "{{ '{{' }} quality.friendly }}" },
-        { text: "Social", value: "{{ '{{' }} quality.social }}" },
-        { text: "ECA", value: "{{ '{{' }} quality.eca }}" },
-        { text: "Deployed", value: "{{ '{{' }} project.deployed }}" },
-        { text: "Intern", value: "{{ '{{' }} student.intern }}" },
-        {
-          text: "Professor Name",
-          value: "{{ '{{' }} student.professor.name }}",
-        },
-        {
-          text: "Professor Title",
-          value: "{{ '{{' }} student.professor.title }}",
-        },
-        {
-          text: "Professor Department",
-          value: "{{ '{{' }} student.professor.department }}",
-        },
-        {
-          text: "Professor Phone",
-          value: "{{ '{{' }} student.professor.phone }}",
-        },
-        {
-          text: "Professor Email",
-          value: "{{ '{{' }} student.professor.email }}",
-        },
-      ];
+          { text: "Quality Recommend", value: "{{ '{{' }} quality.recommend }}" },
+          { text: "Student Name", value: "{{ '{{' }} student.name }}" },
+          { text: "First Name", value: "{{ '{{' }} firstname }}" },
+          { text: "Years Taught", value: "{{ '{{' }} student.years_taught }}" },
+          { text: "Program", value: "{{ '{{' }} student.std.program }}" },
+          { text: "Is Pro", value: "{{ '{{' }} student.is_pro }}" },
+          { text: "Value", value: "{{ '{{' }} value }}" },
+          { text: "Subject", value: "{{ '{{' }} subject }}" },
+          { text: "Quality", value: "{{ '{{' }} quality.quality }}" },
+          { text: "Tentative Ranking", value: "{{ '{{' }} academics.tentative_ranking }}" },
+          { text: "Final Project", value: "{{ '{{' }} project.final_project }}" },
+          { text: "Is Paper", value: "{{ '{{' }} student.is_paper }}" },
+          { text: "Paper Title", value: "{{ '{{' }} paper.paper_title }}" },
+          { text: "Presentation", value: "{{ '{{' }} quality.presentation }}" },
+          { text: "Leadership", value: "{{ '{{' }} quality.leadership }}" },
+          { text: "Teamwork", value: "{{ '{{' }} quality.teamwork }}" },
+          { text: "Hardworking", value: "{{ '{{' }} quality.hardworking }}" },
+          { text: "Friendly", value: "{{ '{{' }} quality.friendly }}" },
+          { text: "Social", value: "{{ '{{' }} quality.social }}" },
+          { text: "ECA", value: "{{ '{{' }} quality.eca }}" },
+          { text: "Deployed", value: "{{ '{{' }} project.deployed }}" },
+          { text: "Intern", value: "{{ '{{' }} student.intern }}" },
+          { text: "Professor Name", value: "{{ '{{' }} student.professor.name }}" },
+          { text: "Professor Title", value: "{{ '{{' }} student.professor.title }}" },
+          { text: "Professor Department", value: "{{ '{{' }} student.professor.department }}" },
+          { text: "Professor Phone", value: "{{ '{{' }} student.professor.phone }}" },
+          { text: "Professor Email", value: "{{ '{{' }} student.professor.email }}" },
+        ];
+
 
       // Add a custom button for if-else conditions
       editor.ui.registry.addButton("ifelse", {
@@ -172,92 +155,7 @@
                   type: "selectbox",
                   name: "placeholder",
                   label: "Placeholder",
-                  items: [
-                    {
-                      text: "Quality Recommend",
-                      value: "{{ '{{' }} quality.recommend }}",
-                    },
-                    {
-                      text: "Student Name",
-                      value: "{{ '{{' }} student.name }}",
-                    },
-                    { text: "First Name", value: "{{ '{{' }} firstname }}" },
-                    {
-                      text: "Years Taught",
-                      value: "{{ '{{' }} student.years_taught }}",
-                    },
-                    {
-                      text: "Program",
-                      value: "{{ '{{' }} student.std.program }}",
-                    },
-                    { text: "Is Pro", value: "{{ '{{' }} student.is_pro }}" },
-                    { text: "Value", value: "{{ '{{' }} value }}" },
-                    { text: "Subject", value: "{{ '{{' }} subject }}" },
-                    { text: "Quality", value: "{{ '{{' }} quality.quality }}" },
-                    {
-                      text: "Tentative Ranking",
-                      value: "{{ '{{' }} academics.tentative_ranking }}",
-                    },
-                    {
-                      text: "Final Project",
-                      value: "{{ '{{' }} project.final_project }}",
-                    },
-                    {
-                      text: "Is Paper",
-                      value: "{{ '{{' }} student.is_paper }}",
-                    },
-                    {
-                      text: "Paper Title",
-                      value: "{{ '{{' }} paper.paper_title }}",
-                    },
-                    {
-                      text: "Presentation",
-                      value: "{{ '{{' }} quality.presentation }}",
-                    },
-                    {
-                      text: "Leadership",
-                      value: "{{ '{{' }} quality.leadership }}",
-                    },
-                    {
-                      text: "Teamwork",
-                      value: "{{ '{{' }} quality.teamwork }}",
-                    },
-                    {
-                      text: "Hardworking",
-                      value: "{{ '{{' }} quality.hardworking }}",
-                    },
-                    {
-                      text: "Friendly",
-                      value: "{{ '{{' }} quality.friendly }}",
-                    },
-                    { text: "Social", value: "{{ '{{' }} quality.social }}" },
-                    { text: "ECA", value: "{{ '{{' }} quality.eca }}" },
-                    {
-                      text: "Deployed",
-                      value: "{{ '{{' }} project.deployed }}",
-                    },
-                    { text: "Intern", value: "{{ '{{' }} student.intern }}" },
-                    {
-                      text: "Professor Name",
-                      value: "{{ '{{' }} student.professor.name }}",
-                    },
-                    {
-                      text: "Professor Title",
-                      value: "{{ '{{' }} student.professor.title }}",
-                    },
-                    {
-                      text: "Professor Department",
-                      value: "{{ '{{' }} student.professor.department }}",
-                    },
-                    {
-                      text: "Professor Phone",
-                      value: "{{ '{{' }} student.professor.phone }}",
-                    },
-                    {
-                      text: "Professor Email",
-                      value: "{{ '{{' }} student.professor.email }}",
-                    },
-                  ],
+                  items: placeholderItems,
                 },
               ],
             },
@@ -322,5 +220,21 @@
     width: 200px;
     margin: 0 auto;
   }
+
+  form .input-box span.details {
+  display: block;
+  align-self: flex-start;
+  font-weight: 500;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+.details2 {
+  display: block;
+  align-self: flex-start;
+  font-weight: 500;
+  margin-bottom: 5px;
+  text-align: left;
+}
 </style>
 {% endblock body %}
