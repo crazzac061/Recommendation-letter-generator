@@ -3,7 +3,6 @@
 {% block title %}Create Template{% endblock title %}
 
 {% block raw %}
-
     <script src="https://cdn.tiny.cloud/1/zv5jgyybldk6c4dkqb0hqzfykj2etmpab2j6s6hpne21u93o/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
     tinymce.init({
@@ -218,29 +217,33 @@
 {% endblock raw %}
 
 {% block body %}
-<div style="width: 90%; align-self: center;">
+<div class="center-content">
     <h3>Create Recommendation Letter Template</h3>
     <form action="/getTemplate" method="post" >
-
         <div class="user-details">
-            <!-- <div class="input-box">
-              <span class="details">Requesting University</span>
-              <input type="text" placeholder="University Name" name="university" required>
-            </div> -->
             <div class="input-box">
               <span class="details">Template Name</span>
               <input type="text" placeholder="Template Name" name="templateName" required>
             </div>
         </div>
         <textarea id="editor" name="content" ></textarea>
-        
-        <div  style="width: 200px; text-align: center;">
-            <div class = 'button'>
-                <input type="submit" value = " Save Template " />
+        <div class="button-container">
+            <div class="button">
+                <input type="submit" value="Save Template" />
             </div>
-
         </div>
-        
     </form>
 </div>
+
+<style>
+.center-content {
+    width: 90%;
+    margin: 0 auto;
+    text-align: center;
+}
+.button-container {
+    width: 200px;
+    margin: 0 auto;
+}
+</style>
 {% endblock body %}
