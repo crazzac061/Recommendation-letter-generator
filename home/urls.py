@@ -42,6 +42,12 @@ urlpatterns = [
     path('deleteSubjects', views.deleteSubjects, name='deleteSubjects'),
     path('teacher', views.teacher, name='teacher'),
 
+    ## Added by 78 batch
+    path('renderCustom', views.renderCustom, name='renderCustom'),
+
+    path('makeTemplate', views.template, name='templateTest'),
+    path('getTemplate', views.getTemplate, name='getTemplate'),
+
 
 
 

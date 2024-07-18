@@ -177,11 +177,13 @@ def final(request, *args, **kwargs):
         letter=f'''
                 \n{textarea1}
         '''
+        print("inside final")
+        print(textarea1)
         text_to_pdf(letter,roll)
-        student.is_generated = True
-        student.save() 
+        # student.is_generated = True
+        # student.save() 
         # messages.error(request, "Sorry!  The Credentials doesn't match.")
-        send_mail('Recommendation Letter', 'Dear sir, Please find the recommendation letter attached with this mail. Link:127.0.0.1:8000/', 'ioerecoletter@gmail.com', [student.email], fail_silently=False)
+        # send_mail('Recommendation Letter', 'Dear sir, Please find the recommendation letter attached with this mail. Link:127.0.0.1:8000/', 'ioerecoletter@gmail.com', [student.email], fail_silently=False)
         return redirect("media/letter/"+roll+".pdf")
 
 def studentfinal(request, *args, **kwargs):
@@ -415,8 +417,10 @@ def make_letter(request):
         quality = Qualities.objects.get(student__name=student.name)
         academics = Academics.objects.get(student__name=student.name)
         files = Files.objects.get(student__name=student.name)
-        teacher_name = student.professor.name
 
+        templates = CustomTemplates.objects.filter(professor = student.professor)
+
+        teacher_name = student.professor.name
 
         return render(
             request,
@@ -432,7 +436,7 @@ def make_letter(request):
                 "teacher": teacher_name,
                 "teacher_model": teacher_model,
                 "files": files, 
-
+                'templates': templates,
             },
         )
 
@@ -1426,3 +1430,153 @@ def teacher(request):
     )
     return response
 
+
+
+def renderCustom(request):
+    if request.method == "POST":
+        roll = request.POST.get("roll")
+
+        presentation= request.POST.get('presentation')
+        quality = request.POST.get('qual')
+
+        leaders = request.POST.get('quality1')
+        hardwork = request.POST.get('quality2')
+        social = request.POST.get('quality3')
+        teamwork = request.POST.get('quality4')
+        friendly = request.POST.get('quality5')
+
+        recommend = request.POST.get('recommend')
+        template_name = request.POST.get('temp')
+
+        stu_info = StudentData.objects.get(std__roll_number=roll)
+
+
+        # qualities_info = Qualities(
+        #     leadership = True if leaders == "on" else False,
+        #     hardworking = True if hardwork == "on" else False,
+        #     social = True if social == "on" else False,
+        #     teamwork = True if teamwork == "on" else False,
+        #     friendly =True if friendly == "on" else False,
+        #     quality = quality,
+        #     presentation = presentation,
+        #     recommend = recommend,
+        #     #extracirricular = extra,
+        #     student = stu_info,
+        # )
+        # qualities_info.save(update_fields=["leadership", "hardworking", 
+        # "social", "teamwork", "friendly", "quality", "presentation", "recommend" , "student"])
+
+        Qualities.objects.filter(student = stu_info).update(leadership = True if leaders == "on" else False,
+                                                            hardworking = True if hardwork == "on" else False,
+                                                            social = True if social == "on" else False,
+                                                            teamwork = True if teamwork == "on" else False,
+                                                            friendly =True if friendly == "on" else False,
+                                                            quality = quality,
+                                                            presentation = presentation,
+                                                            recommend = recommend,)
+
+
+        #student = StudentData.objects.get(std__roll_number = roll)
+        stu = StudentLoginInfo.objects.get(roll_number=roll)
+        student = StudentData.objects.get(name=stu.username)
+        paper = Paper.objects.get(student__name=student.name)
+        project = Project.objects.get(student__name=student.name)
+        university = University.objects.get(student__name=student.name)
+        quality = Qualities.objects.get(student__name=student.name)
+        academics = Academics.objects.get(student__name=student.name)
+        teacher_name = student.professor.name
+        files = Files.objects.get(student__name=student.name)
+
+        bisaya=student.subjects
+        
+        subjec=bisaya.split(',')
+        subjects=subjec[:-1]
+        subject=subjec[-1]
+
+        #student firstname
+        name = student.name
+        fname = name.split(' ')
+        firstname = fname[0]
+        
+
+        length=len(subjec)
+        if length==1:
+            value=True
+        else:
+            value=False
+
+        from jinja2 import Template
+
+
+        template = get_object_or_404(CustomTemplates, template_name = template_name)
+
+        jinja_template = Template(template.template)
+
+        rendered_letter = jinja_template.render({
+                            "student": student,
+                            'subjects':subjects,
+                            'subject':subject,
+                            'value':value , 
+                            'firstname':firstname,
+                            "paper": paper,
+                            "project": project,
+                            "university": university,
+                            "quality": quality,
+                            "academics": academics,
+                            "teacher": teacher_name,
+                            "files": files, 
+                        })
+        
+        return render(request, 'test2.html' , {'letter':rendered_letter , 'student':student})
+
+        # return render(request, 
+        #                 "test.html", 
+        #                 {
+        #                     "student": student,
+        #                     'subjects':subjects,
+        #                     'subject':subject,
+        #                     'value':value , 
+        #                     'firstname':firstname,
+        #                     "paper": paper,
+        #                     "project": project,
+        #                     "university": university,
+        #                     "quality": quality,
+        #                     "academics": academics,
+        #                     "teacher": teacher_name,
+        #                     "files": files, 
+        #                 }
+        #             )
+
+
+def template(request):
+    if request.method == "GET":
+        
+        unique = request.COOKIES.get("unique")
+        teacher = TeacherInfo.objects.get(unique_id=unique)
+
+        return render(request, "customTemplate.html", {'professor':teacher})
+    
+def getTemplate(request):
+    if request.method == "POST":
+        content = request.POST.get("content")
+        uid = request.POST.get("uid")
+        name = request.POST.get("templateName")
+        teacher = TeacherInfo.objects.get(unique_id= uid)
+        print(content)
+        content = content.replace('<p>&nbsp;</p>\n<p>&nbsp;</p>', '')
+        content = content.replace('<p>&nbsp;</p>', '')
+
+        # Replace various types of new lines between paragraphs with <br> tags
+        content = content.replace('</p>\n<p>', '<br>')
+        content = content.replace('</p>\r\n<p>', '<br>')
+        content = content.replace('</p>\r<p>', '<br>')
+
+        # Ensure every paragraph starts with <br>
+        content = content.replace('<p>', '<p><br>')
+
+        print(content)
+
+        template = CustomTemplates(template_name =  name, template=content, professor = teacher)
+        template.save()
+
+        return render(request, "customTemplate.html", {'template':template})

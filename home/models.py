@@ -152,11 +152,23 @@ class Academics(models.Model):
         db_table = 'Academics'
 
 class Files(models.Model):
-    transcript = models.ImageField(upload_to='transcript/', blank=True)
-    CV = models.ImageField(upload_to='cv/', blank=True)
+    transcript = models.FileField(upload_to='transcript/', blank=True)
+    CV = models.FileField(upload_to='cv/', blank=True)
     Photo = models.ImageField(upload_to='student_photo/', blank=True)
     student = models.ForeignKey(StudentData, on_delete= CASCADE)
     def __str__(self):
         return str(self.student) + " Files"
     class Meta:
         db_table = 'Files'
+
+
+class CustomTemplates(models.Model):             
+    template_name = models.CharField(max_length=100,null=True,blank=True)
+    template = models.TextField(null=True,blank=True)
+    professor = models.ForeignKey(TeacherInfo, on_delete= CASCADE)
+
+    def __str__(self):
+        return str(self.professor) + " Template"
+
+    class Meta:
+        db_table = 'Template'
