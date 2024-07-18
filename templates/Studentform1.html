@@ -21,7 +21,7 @@
             <input type="text" placeholder="University Name" name="university" required>
           </div> -->
           <div class="input-box">
-            <span class="details">University's Email</span>
+            <span class="details">Campus Mail</span>
             <input type="email" placeholder="Email" name="email" required>
           </div>
 
@@ -30,7 +30,7 @@
              <select name="prof" id="teacher" required>
                <option>---</option>
                {% for teacher in teachers %}
-               <option value="{{teacher.unique_id}}">{{teacher.name}} | {{teacher.unique_id}}</option>
+               <option value="{{teacher.unique_id}}">{{teacher.name}}</option>
                {% endfor %}
              </select>
            </div>
