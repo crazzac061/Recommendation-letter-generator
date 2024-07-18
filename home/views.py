@@ -177,7 +177,7 @@ def final(request, *args, **kwargs):
         letter=f'''
                 \n{textarea1}
         '''
-
+        print("inside final")
         print(textarea1)
         text_to_pdf(letter,roll)
         # student.is_generated = True
@@ -1562,9 +1562,19 @@ def getTemplate(request):
         uid = request.POST.get("uid")
         name = request.POST.get("templateName")
         teacher = TeacherInfo.objects.get(unique_id= uid)
+        print(content)
         content = content.replace('<p>&nbsp;</p>\n<p>&nbsp;</p>', '')
-        content = content.replace('</p><p>', '<br>')
+        content = content.replace('<p>&nbsp;</p>', '')
+
+        # Replace various types of new lines between paragraphs with <br> tags
+        content = content.replace('</p>\n<p>', '<br>')
+        content = content.replace('</p>\r\n<p>', '<br>')
+        content = content.replace('</p>\r<p>', '<br>')
+
+        # Ensure every paragraph starts with <br>
         content = content.replace('<p>', '<p><br>')
+
+        print(content)
 
         template = CustomTemplates(template_name =  name, template=content, professor = teacher)
         template.save()

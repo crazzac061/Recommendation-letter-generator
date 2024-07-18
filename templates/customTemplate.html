@@ -10,15 +10,8 @@
     plugins: "code",
     toolbar: "bold italic | ifelse | shortcode | code",
     setup: function (editor) {
-      editor.on("keydown", function (e) {
-        if (e.keyCode === 13 && !e.shiftKey) {
-          // Enter key without Shift
-          e.preventDefault(); // Prevent default newline behavior
 
-          // Insert <p><br> at the current caret position
-          editor.selection.setContent("<p><br></p>", { format: "raw" });
-        }
-      });
+   
 
       const placeholderItems = [
           { text: "Quality Recommend", value: "{{ '{{' }} quality.recommend }}" },
