@@ -180,10 +180,10 @@ def final(request, *args, **kwargs):
         print("inside final")
         print(textarea1)
         text_to_pdf(letter,roll)
-        # student.is_generated = True
-        # student.save() 
-        # messages.error(request, "Sorry!  The Credentials doesn't match.")
-        # send_mail('Recommendation Letter', 'Dear sir, Please find the recommendation letter attached with this mail. Link:127.0.0.1:8000/', 'ioerecoletter@gmail.com', [student.email], fail_silently=False)
+        student.is_generated = True
+        student.save() 
+        messages.error(request, "Sorry!  The Credentials doesn't match.")
+        send_mail('Recommendation Letter', 'Dear sir, Please find the recommendation letter attached with this mail. Link:127.0.0.1:8000/', 'ioerecoletter@gmail.com', [student.email], fail_silently=False)
         return redirect("media/letter/"+roll+".pdf")
 
 def studentfinal(request, *args, **kwargs):
