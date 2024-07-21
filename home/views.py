@@ -11,8 +11,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth import logout, authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from .models import *
+from .forms import TeacherInfoForm
 from django.contrib import messages
-
+import random
 import json
 
 
@@ -58,7 +59,8 @@ def index(request):
                     },
                 )
             return response
-        user = request.COOKIES.get('username')                                     #if not student then might be teacher
+        user = request.COOKIES.get('username')            
+        print("teacher " + str(user))                         #if not student then might be teacher
         if TeacherInfo.objects.filter(name__exact=user).exists():
                 value = 0
                 unique = request.COOKIES.get('unique')                              #teacher's unique id (see schema diagram)
@@ -183,7 +185,7 @@ def final(request, *args, **kwargs):
         student.is_generated = True
         student.save() 
         messages.error(request, "Sorry!  The Credentials doesn't match.")
-        send_mail('Recommendation Letter', 'Dear sir, Please find the recommendation letter attached with this mail. Link:127.0.0.1:8000/', 'ioerecoletter@gmail.com', [student.email], fail_silently=False)
+        send_mail('Recommendation Letter', 'Dear sir, Please find the recommendation letter attached with this mail. Link: http://recommendation-generator.bct.itclub.pp.ua/', 'ioerecoletter@gmail.com', [student.email], fail_silently=False)
         return redirect("media/letter/"+roll+".pdf")
 
 def studentfinal(request, *args, **kwargs):
@@ -1580,3 +1582,92 @@ def getTemplate(request):
         template.save()
 
         return render(request, "customTemplate.html", {'template':template})
+    
+
+def admin_login(request):
+    try:
+        if request.user.is_authenticated and request.user.is_superuser:
+            return redirect("adminDashboard")
+        
+        if request.method == "POST":
+            username = request.POST.get("username")
+            password = request.POST.get("password")
+
+            user_obj = User.objects.filter(username=username)
+
+            if not user_obj.exists():
+                messages.error(request, "User does not exist")
+                return render(request, "adminLogin.html")
+            
+            print(f'username {username} password {password}')
+
+            user_obj = authenticate(username=username, password=password)
+            print(user_obj)
+
+
+            if user_obj and user_obj.is_superuser:
+                login(request, user_obj)
+                messages.success(request, "Login successful")
+                return redirect("adminDashboard")
+            
+            
+            messages.info(request, "Invalid credentials")
+            return redirect("loginAdmin")
+        
+        if request.method == "GET":
+            return render (request, "adminLogin.html")
+        
+        return render(request, "adminLogin.html")
+    
+    except Exception as e:
+        print(e)
+        messages.error(request, "An error occured. Please try again.")
+        return render(request, "adminLogin.html")
+    
+
+def generate_unique_id():
+    return str(random.randint(10000, 99999))
+
+
+def adminDashboard(request):
+    if request.method == 'POST':
+        form = TeacherInfoForm(request.POST, request.FILES)
+        if form.is_valid():
+            unique_id = generate_unique_id()
+            while TeacherInfo.objects.filter(unique_id=unique_id).exists():
+                unique_id = generate_unique_id()
+            
+            teacher_info = form.save(commit=False)
+            teacher_info.unique_id = unique_id
+            teacher_info.save()
+            
+            # Create corresponding User with a password
+            user = User.objects.create_user(
+                username=f"{teacher_info.name.lower().replace(' ', '')}_{unique_id}",
+                password=form.cleaned_data['password'],  # Password is taken from the cleaned data
+                first_name=teacher_info.name,
+                last_name= '/' + unique_id
+            )
+            user.email = teacher_info.email
+            user.save()
+            
+            # Save many-to-many relationships
+            form.save_m2m()
+            
+            messages.success(request, 'Teacher added successfully!')
+            return redirect('adminDashboard')
+        else:
+            messages.error(request, 'An error occurred while adding the teacher. Please try again.')
+            return redirect('adminDashboard')
+    else:
+        form = TeacherInfoForm()
+
+    # Query departments and subjects for the form
+    departments = Department.objects.all()
+    subjects = Subject.objects.all()
+    
+    return render(request, 'adminDashboard.html', {
+        'form': form,
+        'departments': departments,
+        'subjects': subjects
+    })

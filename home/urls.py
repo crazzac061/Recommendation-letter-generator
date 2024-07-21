@@ -44,9 +44,10 @@ urlpatterns = [
 
     ## Added by 78 batch
     path('renderCustom', views.renderCustom, name='renderCustom'),
-
     path('makeTemplate', views.template, name='templateTest'),
     path('getTemplate', views.getTemplate, name='getTemplate'),
+    path('loginAdmin', views.admin_login, name='admin_login'),
+    path('adminDashboard', views.adminDashboard, name='adminDashboard'),
 
 
 
