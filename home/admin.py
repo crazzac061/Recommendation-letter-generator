@@ -3,7 +3,8 @@ from home.models import *
 
 # Register your models here.
 admin.site.register(StudentLoginInfo)
-admin.site.register(StudentData)
+admin.site.register(Application)
+# admin.site.register(StudentData)
 admin.site.register(TeacherInfo)
 admin.site.register(Department)
 admin.site.register(Program)

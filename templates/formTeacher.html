@@ -116,7 +116,7 @@
   <!-- <div class="title">Give Information for {{student.name}}</div> -->
   <br />
   <div class="content">
-    <form method="POST" , action="/renderCustom" >
+    <form method="POST" id="recommendationForm" action="/renderCustom" >
       {% csrf_token %}
        <div class="user-details">
       <!--  <div class="input-box">
@@ -270,6 +270,7 @@
         <div class="input-box">
           <span class="details">Choose Template</span>
            <select name="temp" id="template" required>
+            <option value = 'default'>Default</option>
              {% for template in templates %}
              <option value="{{template.template_name}}">{{template.template_name}}</option>
              {% endfor %}
@@ -295,5 +296,18 @@
   </div>
   </div>
 </div>
+
+<script>
+  document.getElementById('template').addEventListener('change', function() {
+    var form = document.getElementById('recommendationForm');
+    var selectedTemplate = this.value;
+    if (selectedTemplate === 'default') {
+      form.action = '/edit';
+    } else {
+      form.action = '/renderCustom';
+    }
+  });
+</script>
+
 
 {% endblock body %}

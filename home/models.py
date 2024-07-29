@@ -63,7 +63,7 @@ class TeacherInfo(models.Model):
     class Meta:
         db_table = 'TeacherInfo'
 
-class StudentData(models.Model): 
+class Application(models.Model): 
     name = models.CharField(max_length=122,null=True,blank=True)
     email = models.EmailField(null=True,blank=True)
     professor = models.ForeignKey(TeacherInfo, on_delete= CASCADE)
@@ -77,18 +77,18 @@ class StudentData(models.Model):
 
 
     def __str__(self):
-        return str(self.name)
+        return str(self.name) + " " + str(self.professor)
     
     class Meta:
-        db_table = 'StudentData'
+        db_table = 'Application'
 
 class Paper(models.Model):
     paper_title = models.CharField(max_length=100,null=True,blank=True)
     paper_link = models.CharField(max_length=200,null=True,blank=True)
-    student = models.ForeignKey(StudentData, on_delete= CASCADE)
+    application = models.ForeignKey(Application, on_delete= CASCADE)
 
     def __str__(self):
-        return str(self.paper_title)
+        return str(self.application) + str(self.paper_title)
 
     class Meta:
         db_table = 'Paper'
@@ -98,10 +98,10 @@ class Project(models.Model):
     supervised_project = models.CharField(max_length=100,null=True,blank=True)
     final_project= models.CharField(max_length=200,null=True,blank=True)
     deployed = models.BooleanField(default=False)
-    student = models.ForeignKey(StudentData, on_delete= CASCADE)
+    application = models.ForeignKey(Application, on_delete= CASCADE)
 
     def __str__(self):
-        return str(self.student) + str(self.supervised_project)
+        return str(self.application) + str(self.supervised_project)
 
     class Meta:
         db_table = 'Project'
@@ -111,16 +111,16 @@ class University(models.Model):
     uni_name = models.CharField(max_length=100,null=True,blank=True)
     uni_deadline = models.DateField(null=True,blank=True)
     program_applied = models.CharField(max_length=100,null=True,blank=True)
-    student = models.ForeignKey(StudentData, on_delete= CASCADE)
+    application = models.ForeignKey(Application, on_delete= CASCADE)
 
     def __str__(self):
-        return str(self.student) + str(self.uni_name)
+        return str(self.application) + str(self.uni_name)
 
     class Meta:
         db_table = 'University'
 
 class Qualities(models.Model):
-    student = models.ForeignKey(StudentData, on_delete= CASCADE)
+    application = models.ForeignKey(Application, on_delete= CASCADE)
 
     leadership = models.BooleanField(default=False) 
     hardworking = models.BooleanField(default=False) 
@@ -135,18 +135,18 @@ class Qualities(models.Model):
     recommend = models.CharField(max_length=50,null=True,blank=True)
 
     def __str__(self):
-        return str(self.student) + " Qualities"
+        return str(self.application) + " Qualities"
     class Meta:
         db_table = 'Qualities'
 
 
 class Academics(models.Model):
-    student = models.ForeignKey(StudentData, on_delete= CASCADE)
+    application = models.ForeignKey(Application, on_delete= CASCADE)
     gpa= models.CharField(max_length=50,null=True,blank=True)
     tentative_ranking= models.CharField(max_length=50,null=True,blank=True)
     
     def __str__(self):
-        return str(self.student) + " Academics"
+        return str(self.application) + " Academics"
 
     class Meta:
         db_table = 'Academics'
@@ -155,9 +155,9 @@ class Files(models.Model):
     transcript = models.FileField(upload_to='transcript/', blank=True)
     CV = models.FileField(upload_to='cv/', blank=True)
     Photo = models.ImageField(upload_to='student_photo/', blank=True)
-    student = models.ForeignKey(StudentData, on_delete= CASCADE)
+    application = models.ForeignKey(Application, on_delete= CASCADE)
     def __str__(self):
-        return str(self.student) + " Files"
+        return str(self.application) + " Files"
     class Meta:
         db_table = 'Files'
 

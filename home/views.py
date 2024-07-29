@@ -45,32 +45,54 @@ def index(request):
     
     #check if the user is logged in or not
     if request.method == "GET":                                                     #if logged in 
-        naam = request.COOKIES.get('student')                                       #if exist
+        naam = request.COOKIES.get('student')      
+        
         if StudentLoginInfo.objects.filter(username__exact=naam).exists():
             student = StudentLoginInfo.objects.get(username__exact=naam)
+
             teachers = TeacherInfo.objects.filter(department=student.department)
-            response =  render(                                                     #render student home page
-                    request,
-                    "Studentform1.html",
-                    {
-                        "naam": student.username,
-                        "teachers": teachers,
-                        "roll": student.roll_number,
-                    },
-                )
+            if Application.objects.filter(std__username=naam).exists():                 #std is foreign key for StudentLoginInfo
+                appli = Application.objects.filter(std__username=naam)
+            else:
+                appli = {}
+            response = render(
+                        request,
+                        "student_success.html",
+                        {
+                            "naam": student.username,
+                            "roll": student.roll_number,
+                            "letter": True,
+                            'applications': appli
+                        },
+                    )
+                    
             return response
-        user = request.COOKIES.get('username')            
-        print("teacher " + str(user))                         #if not student then might be teacher
-        if TeacherInfo.objects.filter(name__exact=user).exists():
+                                         #if exist
+        # if StudentLoginInfo.objects.filter(username__exact=naam).exists():
+        #     student = StudentLoginInfo.objects.get(username__exact=naam)
+        #     teachers = TeacherInfo.objects.filter(department=student.department)
+        #     response =  render(                                                     #render student home page
+        #             request,
+        #             "Studentform1.html",
+        #             {
+        #                 "naam": student.username,
+        #                 "teachers": teachers,
+        #                 "roll": student.roll_number,
+        #             },
+        #         )
+            # return response
+        uid = request.COOKIES.get('unique')            
+        print("teacher " + str(uid))                         #if not student then might be teacher
+        if TeacherInfo.objects.filter(unique_id__exact=uid).exists():
                 value = 0
                 unique = request.COOKIES.get('unique')                              #teacher's unique id (see schema diagram)
 
 
                 # generate teachers home page
                 teacher_model = TeacherInfo.objects.get(unique_id=unique)
-                generated_dataharu = StudentData.objects.filter(professor__unique_id=unique , is_generated=True)
+                generated_dataharu = Application.objects.filter(professor__unique_id=unique , is_generated=True)
 
-                dataharu = StudentData.objects.filter(professor__unique_id=unique)
+                dataharu = Application.objects.filter(professor__unique_id=unique)
                 number = len(dataharu)
                 # check if there is request or not on teachers page
                 for data in dataharu:
@@ -83,9 +105,9 @@ def index(request):
                     check_value = False
                     # to convert database to json objects
                 std_dataharu = serializers.serialize(
-                    "json", StudentData.objects.filter(professor__unique_id=unique,is_generated=True)
+                    "json", Application.objects.filter(professor__unique_id=unique,is_generated=True)
                 )
-                non_generated = StudentData.objects.filter(
+                non_generated = Application.objects.filter(
                     is_generated=False, professor__unique_id=unique
                 )
 
@@ -118,7 +140,7 @@ from io import BytesIO as bio
 #import fs
 from home.forms import StudentForm
 
-def text_to_pdf(text,roll):
+def text_to_pdf(text,roll, name):
     a4_width_mm = 270
     pt_to_mm = 0.35
     fontsize_pt = 11
@@ -162,7 +184,7 @@ def text_to_pdf(text,roll):
 
 
 
-    pdf.output("media/letter/"+roll+".pdf", "F")
+    pdf.output("media/letter/"+roll+'_'+name+".pdf", "F")
 
 
 import re
@@ -172,8 +194,11 @@ def final(request, *args, **kwargs):
     if request.method == "POST":
         textarea1 = request.POST.get("textarea1")
         roll = request.POST.get("roll")
-        student = StudentData.objects.get(std__roll_number=roll)
+        unique = request.COOKIES.get('unique')
+        application = Application.objects.get(std__roll_number=roll, professor__unique_id=unique)
         
+
+
         # textarea2 = request.POST.get("textarea2")
         # textarea3 = request.POST.get("textarea3")
         letter=f'''
@@ -181,17 +206,17 @@ def final(request, *args, **kwargs):
         '''
         print("inside final")
         print(textarea1)
-        text_to_pdf(letter,roll)
-        student.is_generated = True
-        student.save() 
+        text_to_pdf(letter,roll, application.professor.name)
+        application.is_generated = True
+        application.save() 
         messages.error(request, "Sorry!  The Credentials doesn't match.")
-        send_mail('Recommendation Letter', 'Dear sir, Please find the recommendation letter attached with this mail. Link: http://recommendation-generator.bct.itclub.pp.ua/', 'ioerecoletter@gmail.com', [student.email], fail_silently=False)
-        return redirect("media/letter/"+roll+".pdf")
+        send_mail('Recommendation Letter', 'Dear sir, Please find the recommendation letter attached with this mail. Link: http://recommendation-generator.bct.itclub.pp.ua/', 'ioerecoletter@gmail.com', [application.email], fail_silently=False)
+        return redirect("media/letter/"+roll+"_"+ application.professor.name +".pdf")
 
 def studentfinal(request, *args, **kwargs):
     if request.method == "POST":
-        roll = request.POST.get("roll")
-    return redirect("media/letter/"+roll+".pdf")
+        letter_name = request.POST.get("id")
+    return redirect("media/letter/"+letter_name+".pdf")
 
 def registerStudent(request):
     departments = Department.objects.all().values()
@@ -202,26 +227,46 @@ def registerStudent(request):
         naam = request.COOKIES.get('student')
         if StudentLoginInfo.objects.filter(username__exact=naam).exists():
             student = StudentLoginInfo.objects.get(username__exact=naam)
+
             teachers = TeacherInfo.objects.filter(department=student.department)
-            response =  render(
-                    request,
-                    "Studentform1.html",
-                    {
-                        "naam": student.username,
-                        "teachers": teachers,
-                        "roll": student.roll_number,
-                    },
-                )
+            if Application.objects.filter(std__username=naam).exists():                 #std is foreign key for StudentLoginInfo
+                appli = Application.objects.filter(std__username=naam)
+            else:
+                appli = {}
+            response = render(
+                        request,
+                        "student_success.html",
+                        {
+                            "naam": student.username,
+                            "roll": student.roll_number,
+                            "letter": True,
+                            'applications': appli
+                        },
+                    )
+                    
             return response
-        user = request.COOKIES.get('username')
-        if TeacherInfo.objects.filter(name__exact=user).exists():
+       
+        # if StudentLoginInfo.objects.filter(username__exact=naam).exists():
+        #     student = StudentLoginInfo.objects.get(username__exact=naam)
+        #     teachers = TeacherInfo.objects.filter(department=student.department)
+        #     response =  render(
+        #             request,
+        #             "Studentform1.html",
+        #             {
+        #                 "naam": student.username,
+        #                 "teachers": teachers,
+        #                 "roll": student.roll_number,
+        #             },
+        #         )
+        #     return response
+        unique = request.COOKIES.get('unique')
+        if TeacherInfo.objects.filter(unique_id__exact=unique).exists():
                 value = 0
-                unique = request.COOKIES.get('unique')
 
                 teacher_model = TeacherInfo.objects.get(unique_id=unique)
-                generated_dataharu = StudentData.objects.filter(professor__unique_id=unique , is_generated=True)
+                generated_dataharu = Application.objects.filter(professor__unique_id=unique , is_generated=True)
 
-                dataharu = StudentData.objects.filter(professor__unique_id=unique)
+                dataharu = Application.objects.filter(professor__unique_id=unique)
                 number = len(dataharu)
                 # to check if there is request or not on teachers page
                 for data in dataharu:
@@ -234,9 +279,9 @@ def registerStudent(request):
                     check_value = False
                     # to convert database to json objects
                 std_dataharu = serializers.serialize(
-                    "json", StudentData.objects.filter(professor__unique_id=unique,is_generated=True)
+                    "json", Application.objects.filter(professor__unique_id=unique,is_generated=True)
                 )
-                non_generated = StudentData.objects.filter(
+                non_generated = Application.objects.filter(
                     is_generated=False, professor__unique_id=unique
                 )
 
@@ -292,26 +337,32 @@ def loginStudent(request):
         naam = request.COOKIES.get('student')
         if StudentLoginInfo.objects.filter(username__exact=naam).exists():
             student = StudentLoginInfo.objects.get(username__exact=naam)
+
             teachers = TeacherInfo.objects.filter(department=student.department)
-            response =  render(
-                    request,
-                    "Studentform1.html",
-                    {
-                        "naam": student.username,
-                        "teachers": teachers,
-                        "roll": student.roll_number,
-                    },
-                )
+            if Application.objects.filter(std__username=naam).exists():                 #std is foreign key for StudentLoginInfo
+                appli = Application.objects.filter(std__username=naam)
+            else:
+                appli = {}
+            response = render(
+                        request,
+                        "student_success.html",
+                        {
+                            "naam": student.username,
+                            "roll": student.roll_number,
+                            "letter": True,
+                            'applications': appli
+                        },
+                    )
+                    
             return response
-        user = request.COOKIES.get('username')
-        if TeacherInfo.objects.filter(name__exact=user).exists():
+        unique = request.COOKIES.get('unique')
+        if TeacherInfo.objects.filter(unique_id__exact=unique).exists():
                 value = 0
-                unique = request.COOKIES.get('unique')
 
                 teacher_model = TeacherInfo.objects.get(unique_id=unique)
-                generated_dataharu = StudentData.objects.filter(professor__unique_id=unique , is_generated=True)
+                generated_dataharu = Application.objects.filter(professor__unique_id=unique , is_generated=True)
 
-                dataharu = StudentData.objects.filter(professor__unique_id=unique)
+                dataharu = Application.objects.filter(professor__unique_id=unique)
                 number = len(dataharu)
                 # to check if there is request or not on teachers page
                 for data in dataharu:
@@ -324,9 +375,9 @@ def loginStudent(request):
                     check_value = False
                     # to convert database to json objects
                 std_dataharu = serializers.serialize(
-                    "json", StudentData.objects.filter(professor__unique_id=unique,is_generated=True)
+                    "json", Application.objects.filter(professor__unique_id=unique,is_generated=True)
                 )
-                non_generated = StudentData.objects.filter(
+                non_generated = Application.objects.filter(
                     is_generated=False, professor__unique_id=unique
                 )
 
@@ -355,16 +406,17 @@ def loginStudent(request):
                 messages.error(request, "Sorry!  The Credentials doesn't match.")
                 return render(request, "loginStudent.html")
             teachers = TeacherInfo.objects.filter(department=student.department)
-            if StudentData.objects.filter(std__username=naam).exists():                 #std is foreign key for StudentLoginInfo
-                stdnt = StudentData.objects.get(std__username=naam)
-                if stdnt.is_generated: 
+            if Application.objects.filter(std__username=naam).exists():                 #std is foreign key for StudentLoginInfo
+                appli = Application.objects.filter(std__username=naam)
+                if appli[0].is_generated: 
                     response = render(
                         request,
                         "student_success.html",
                         {
                             "naam": student.username,
                             "roll": student.roll_number,
-                            "letter": stdnt.is_generated,
+                            "letter": appli[0].is_generated,
+                            'applications': appli
                         },
                     )
                     
@@ -412,23 +464,24 @@ def make_letter(request):
         teacher_model = TeacherInfo.objects.get(unique_id=teacher_id)
 
         stu = StudentLoginInfo.objects.get(roll_number=roll)
-        student = StudentData.objects.get(name=stu.username)
-        paper = Paper.objects.get(student__name=student.name)
-        project = Project.objects.get(student__name=student.name)
-        university = University.objects.get(student__name=student.name)
-        quality = Qualities.objects.get(student__name=student.name)
-        academics = Academics.objects.get(student__name=student.name)
-        files = Files.objects.get(student__name=student.name)
+        appli = Application.objects.get(name=stu.username, professor__unique_id=teacher_id)
+        paper = Paper.objects.get(application=appli)
+        project = Project.objects.filter(application = appli)
 
-        templates = CustomTemplates.objects.filter(professor = student.professor)
+        university = University.objects.get(application=appli)
+        quality = Qualities.objects.get(application=appli)
+        academics = Academics.objects.get(application=appli)
+        files = Files.objects.get(application=appli)
 
-        teacher_name = student.professor.name
+        templates = CustomTemplates.objects.filter(professor = appli.professor)
+
+        teacher_name = appli.professor.name
 
         return render(
             request,
             "formTeacher.html",
             {
-                "student": student,
+                "student": appli,
                 "roll": roll,
                 "paper": paper,
                 "project": project,
@@ -479,7 +532,7 @@ def studentform1(request):
             teachers = TeacherInfo.objects.filter(department=stu.department)
             if TeacherInfo.objects.filter(unique_id=id).exists():
                 prof = TeacherInfo.objects.get(unique_id=id)
-                info = StudentData(
+                info = Application(
                     name=stu.username,
                     email=uemail,
                     professor=prof,
@@ -491,18 +544,18 @@ def studentform1(request):
                     intern = True if intern == "on" else False,
                 )
                 
-                if StudentData.objects.filter(name=naam).exists():
-                    info = StudentData.objects.get(name=naam)
-                    info.name=stu.username
-                    info.email=uemail
-                    info.professor=prof
-                    info.std=stu
-                    info.is_pro=is_project
-                    info.years_taught=known_year
-                    info.subjects=listToStr
-                    info.is_paper = has_paper
-                    info.intern = True if intern == "on" else False
-                    info.save()
+                if Application.objects.filter(std__username = naam ,professor__name = prof.name ).exists():
+                    info = Application.objects.get(std__username = naam ,professor__name = prof.name)
+                    info.name=stu.username 
+                    info.email=uemail 
+                    info.professor=prof 
+                    info.std=stu 
+                    info.is_pro=is_project 
+                    info.years_taught=known_year 
+                    info.subjects=listToStr 
+                    info.is_paper = has_paper 
+                    info.intern = True if intern == "on" else False 
+                    info.save() 
                     
                 else:
                     info.save()
@@ -511,11 +564,11 @@ def studentform1(request):
                     supervised_project = s_project,
                     final_project = pro1,
                     deployed = True if deployed == "on" else False,
-                    student = info,
+                    application = info,
                 )
                 
-                if Project.objects.filter(student = info).exists():
-                    project = Project.objects.get(student=info)
+                if Project.objects.filter(application = info).exists():
+                    project = Project.objects.get(application=info)
                     project.delete()
                     
                 project_info.save()
@@ -524,11 +577,11 @@ def studentform1(request):
                 paper_info = Paper(
                     paper_link = paperlink,
                     paper_title = title_paper,
-                    student = info,
+                    application = info,
                 )
                 
-                if Paper.objects.filter(student = info).exists():
-                    paper = Paper.objects.get(student=info)
+                if Paper.objects.filter(application = info).exists():
+                    paper = Paper.objects.get(application=info)
                     paper.delete()
 
                 paper_info.save()
@@ -545,19 +598,41 @@ def studentform1(request):
                         },
                     )
 
-            return render(request, "Studentform2.html", {'roll':uroll},)
+            return render(request, "Studentform2.html", {'roll':uroll, 'naam' : naam, 'prof_name': prof.name},)
 
         else:
             messages.error(request, "Please login first")
             return render(request, "loginStudent.html")
 
     
+    if request.method == "GET":
+        naam = request.COOKIES.get('student')
+        if StudentLoginInfo.objects.filter(username__exact=naam).exists():
+            student = StudentLoginInfo.objects.get(username__exact=naam)
+            teachers = TeacherInfo.objects.filter(department=student.department)
+            response =  render(
+                    request,
+                    "Studentform1.html",
+                    {
+                        "naam": student.username,
+                        "teachers": teachers,
+                        "roll": student.roll_number,
+                    },
+                )
+            return response
+        # user = request.COOKIES.get('username')
+
+
     messages.error(request, "Please login first")
     return render(request, "loginStudent.html")
 
 def studentform2(request):
     if request.method == "POST" :
         uroll = request.POST.get("roll")
+
+        naam = request.POST.get("naam")
+        prof_name = request.POST.get("prof_name")
+
         uuni = request.POST.get("university")
         uni_program = request.POST.get("program_applied")
         uni_deadline = request.POST.get("deadline")
@@ -577,19 +652,19 @@ def studentform2(request):
         # teamwork = request.POST.get('quality4')
         # friendly = request.POST.get('quality5')
 
-    
 
-        stu_info = StudentData.objects.get(std__roll_number=uroll)
+
+        info = Application.objects.get(std__username = naam ,professor__name = prof_name )
 
 
         uni_info = University(
             uni_name = uuni,
             uni_deadline = uni_deadline,
             program_applied = uni_program,
-            student = stu_info,
+            application = info,
         )
-        if University.objects.filter(student = stu_info).exists():
-            uni = University.objects.get(student=stu_info)
+        if University.objects.filter(application = info).exists():
+            uni = University.objects.get(application=info)
             uni.delete()
             
         uni_info.save()
@@ -597,11 +672,11 @@ def studentform2(request):
         academics_info = Academics(
             gpa = aca_gpa,
             tentative_ranking = aca_ranking,
-            student = stu_info,
+            application  = info,
         )
         
-        if Academics.objects.filter(student = stu_info).exists():
-            academic = Academics.objects.get(student=stu_info)
+        if Academics.objects.filter(application = info ).exists():
+            academic = Academics.objects.get(application = info )
             academic.delete()
             
         academics_info.save()
@@ -610,11 +685,11 @@ def studentform2(request):
             transcript = file_transcript,
             CV = file_cv,
             Photo = file_photo,
-            student = stu_info,
+            application = info,
         )
         
-        if Files.objects.filter(student = stu_info).exists():
-            file = Files.objects.get(student=stu_info)
+        if Files.objects.filter(application = info ).exists():
+            file = Files.objects.get(application = info )
             file.delete()
             
         file_info.save()
@@ -628,16 +703,17 @@ def studentform2(request):
             # quality = quality,
             # presentation = presentation,
             extracirricular = extra,
-            student = stu_info,
+            application = info ,
         )
         
-        if Qualities.objects.filter(student = stu_info).exists():
-            quality = Qualities.objects.get(student=stu_info)
+        if Qualities.objects.filter(application = info ).exists():
+            quality = Qualities.objects.get(application = info )
             quality.delete()
             
         qualities_info.save()
 
-    return render(request, "student_success.html",{'roll':uroll})
+    return render(request, "student_success.html",{'roll':uroll, 'letter' : False, 'naam' : naam})
+
 
 
 def loginTeacher(request):
@@ -645,16 +721,23 @@ def loginTeacher(request):
         naam = request.COOKIES.get('student')
         if StudentLoginInfo.objects.filter(username__exact=naam).exists():
             student = StudentLoginInfo.objects.get(username__exact=naam)
+
             teachers = TeacherInfo.objects.filter(department=student.department)
-            response =  render(
-                    request,
-                    "Studentform1.html",
-                    {
-                        "naam": student.username,
-                        "teachers": teachers,
-                        "roll": student.roll_number,
-                    },
-                )
+            if Application.objects.filter(std__username=naam).exists():                 #std is foreign key for StudentLoginInfo
+                appli = Application.objects.filter(std__username=naam)
+            else:
+                appli = {}
+            response = render(
+                        request,
+                        "student_success.html",
+                        {
+                            "naam": student.username,
+                            "roll": student.roll_number,
+                            "letter": True,
+                            'applications': appli
+                        },
+                    )
+                    
             return response
         user = request.COOKIES.get('username')
         if TeacherInfo.objects.filter(name__exact=user).exists():
@@ -662,9 +745,9 @@ def loginTeacher(request):
                 unique = request.COOKIES.get('unique')
 
                 teacher_model = TeacherInfo.objects.get(unique_id=unique)
-                generated_dataharu = StudentData.objects.get(professor__unique_id=unique , is_generated=True)
+                generated_dataharu = Application.objects.get(professor__unique_id=unique , is_generated=True)
 
-                dataharu = StudentData.objects.filter(professor__unique_id=unique)
+                dataharu = Application.objects.filter(professor__unique_id=unique)
                 number = len(dataharu)
                 # to check if there is request or not on teachers page
                 for data in dataharu:
@@ -677,9 +760,9 @@ def loginTeacher(request):
                     check_value = False
                     # to convert database to json objects
                 std_dataharu = serializers.serialize(
-                    "json", StudentData.objects.filter(professor__unique_id=unique,is_generated=True)
+                    "json", Application.objects.filter(professor__unique_id=unique,is_generated=True)
                 )
-                non_generated = StudentData.objects.filter(
+                non_generated = Application.objects.filter(
                     is_generated=False, professor__unique_id=unique
                 )
 
@@ -718,9 +801,9 @@ def loginTeacher(request):
                 # name = x[0]
 
                 teacher_model = TeacherInfo.objects.get(unique_id=unique)
-                generated_dataharu = StudentData.objects.filter(professor__unique_id=unique , is_generated=True)
+                generated_dataharu = Application.objects.filter(professor__unique_id=unique , is_generated=True)
 
-                dataharu = StudentData.objects.filter(professor__unique_id=unique)
+                dataharu = Application.objects.filter(professor__unique_id=unique)
                 number = len(dataharu)
                 # to check if there is request or not on teachers page
                 for data in dataharu:
@@ -733,9 +816,9 @@ def loginTeacher(request):
                     check_value = False
                     # to convert database to json objects
                 std_dataharu = serializers.serialize(
-                    "json", StudentData.objects.filter(professor__unique_id=unique,is_generated=True)
+                    "json", Application.objects.filter(professor__unique_id=unique,is_generated=True)
                 )
-                non_generated = StudentData.objects.filter(
+                non_generated = Application.objects.filter(
                     is_generated=False, professor__unique_id=unique
                 )
 
@@ -1283,7 +1366,7 @@ def getdetails(request):
 
     teacher = TeacherInfo.objects.get(unique_id=teacher_id)
     subjects = teacher.subjects.all()
-
+    print(subjects)
     for subject in subjects:
         result_set.append({"subject_name": subject})
     return HttpResponse(
@@ -1296,6 +1379,7 @@ def getdetails(request):
 def edit(request):
     if request.method == "POST":
         roll = request.POST.get("roll")
+        unique = request.COOKIES.get("unique")
 
         presentation= request.POST.get('presentation')
         quality = request.POST.get('qual')
@@ -1308,7 +1392,7 @@ def edit(request):
 
         recommend = request.POST.get('recommend')
 
-        stu_info = StudentData.objects.get(std__roll_number=roll)
+        info = Application.objects.get(std__roll_number=roll, professor__unique_id=unique)
 
 
         # qualities_info = Qualities(
@@ -1326,7 +1410,7 @@ def edit(request):
         # qualities_info.save(update_fields=["leadership", "hardworking", 
         # "social", "teamwork", "friendly", "quality", "presentation", "recommend" , "student"])
 
-        Qualities.objects.filter(student = stu_info).update(leadership = True if leaders == "on" else False,
+        Qualities.objects.filter(application  = info).update(leadership = True if leaders == "on" else False,
                                                             hardworking = True if hardwork == "on" else False,
                                                             social = True if social == "on" else False,
                                                             teamwork = True if teamwork == "on" else False,
@@ -1338,23 +1422,23 @@ def edit(request):
 
         #student = StudentData.objects.get(std__roll_number = roll)
         stu = StudentLoginInfo.objects.get(roll_number=roll)
-        student = StudentData.objects.get(name=stu.username)
-        paper = Paper.objects.get(student__name=student.name)
-        project = Project.objects.get(student__name=student.name)
-        university = University.objects.get(student__name=student.name)
-        quality = Qualities.objects.get(student__name=student.name)
-        academics = Academics.objects.get(student__name=student.name)
-        teacher_name = student.professor.name
-        files = Files.objects.get(student__name=student.name)
+        application = Application.objects.get(name=stu.username, professor__unique_id=unique)
+        paper = Paper.objects.get(application = application )
+        project = Project.objects.get(application = application)
+        university = University.objects.get(application = application)
+        quality = Qualities.objects.get(application = application)
+        academics = Academics.objects.get(application = application)
+        teacher_name = application.professor.name
+        files = Files.objects.get(application = application)
 
-        bisaya=student.subjects
+        bisaya=application.subjects
         
         subjec=bisaya.split(',')
         subjects=subjec[:-1]
         subject=subjec[-1]
 
         #student firstname
-        name = student.name
+        name = application.name
         fname = name.split(' ')
         firstname = fname[0]
         
@@ -1368,7 +1452,7 @@ def edit(request):
         return render(request, 
                         "test.html", 
                         {
-                            "student": student,
+                            "student": application,
                             'subjects':subjects,
                             'subject':subject,
                             'value':value , 
@@ -1397,9 +1481,9 @@ def teacher(request):
 
     teacher_model = TeacherInfo.objects.get(unique_id=unique)
     # for loop launlaii 
-    generated_dataharu = StudentData.objects.filter(professor__unique_id=unique , is_generated=True)
+    generated_dataharu = Application.objects.filter(professor__unique_id=unique , is_generated=True)
 
-    dataharu = StudentData.objects.filter(professor__unique_id=unique)
+    dataharu = Application.objects.filter(professor__unique_id=unique)
     number = len(dataharu)
     # to check if there is request or not on teachers page
     for data in dataharu:
@@ -1412,9 +1496,9 @@ def teacher(request):
         check_value = False
         # to convert database to json objects
     std_dataharu = serializers.serialize(
-        "json", StudentData.objects.filter(professor__unique_id=unique,is_generated=True)
+        "json", Application.objects.filter(professor__unique_id=unique,is_generated=True)
     )
-    non_generated = StudentData.objects.filter(
+    non_generated = Application.objects.filter(
         is_generated=False, professor__unique_id=unique
     )
 
@@ -1436,6 +1520,9 @@ def teacher(request):
 
 def renderCustom(request):
     if request.method == "POST":
+
+        unique = request.COOKIES.get("unique")
+
         roll = request.POST.get("roll")
 
         presentation= request.POST.get('presentation')
@@ -1450,7 +1537,7 @@ def renderCustom(request):
         recommend = request.POST.get('recommend')
         template_name = request.POST.get('temp')
 
-        stu_info = StudentData.objects.get(std__roll_number=roll)
+        info = Application.objects.get(professor__unique_id=unique , std__roll_number=roll)
 
 
         # qualities_info = Qualities(
@@ -1468,7 +1555,7 @@ def renderCustom(request):
         # qualities_info.save(update_fields=["leadership", "hardworking", 
         # "social", "teamwork", "friendly", "quality", "presentation", "recommend" , "student"])
 
-        Qualities.objects.filter(student = stu_info).update(leadership = True if leaders == "on" else False,
+        Qualities.objects.filter(application = info).update(leadership = True if leaders == "on" else False,
                                                             hardworking = True if hardwork == "on" else False,
                                                             social = True if social == "on" else False,
                                                             teamwork = True if teamwork == "on" else False,
@@ -1480,23 +1567,23 @@ def renderCustom(request):
 
         #student = StudentData.objects.get(std__roll_number = roll)
         stu = StudentLoginInfo.objects.get(roll_number=roll)
-        student = StudentData.objects.get(name=stu.username)
-        paper = Paper.objects.get(student__name=student.name)
-        project = Project.objects.get(student__name=student.name)
-        university = University.objects.get(student__name=student.name)
-        quality = Qualities.objects.get(student__name=student.name)
-        academics = Academics.objects.get(student__name=student.name)
-        teacher_name = student.professor.name
-        files = Files.objects.get(student__name=student.name)
+        application = Application.objects.get(name=stu.username , professor__unique_id=unique)
+        paper = Paper.objects.get(application = application )
+        project = Project.objects.get(application = application)
+        university = University.objects.get(application = application)
+        quality = Qualities.objects.get(application = application)
+        academics = Academics.objects.get(application = application)
+        teacher_name = application.professor.name
+        files = Files.objects.get(application = application)
 
-        bisaya=student.subjects
+        bisaya=application.subjects
         
         subjec=bisaya.split(',')
         subjects=subjec[:-1]
         subject=subjec[-1]
 
         #student firstname
-        name = student.name
+        name = application.name
         fname = name.split(' ')
         firstname = fname[0]
         
@@ -1515,7 +1602,7 @@ def renderCustom(request):
         jinja_template = Template(template.template)
 
         rendered_letter = jinja_template.render({
-                            "student": student,
+                            "student": application,
                             'subjects':subjects,
                             'subject':subject,
                             'value':value , 
@@ -1529,7 +1616,7 @@ def renderCustom(request):
                             "files": files, 
                         })
         
-        return render(request, 'test2.html' , {'letter':rendered_letter , 'student':student})
+        return render(request, 'test2.html' , {'letter':rendered_letter , 'student':application})
 
         # return render(request, 
         #                 "test.html", 
