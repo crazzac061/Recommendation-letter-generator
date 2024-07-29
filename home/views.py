@@ -767,7 +767,7 @@ def loginTeacher(request):
                 )
 
                 response = render(
-                    request,qq
+                    request,{
                         "all_students": generated_dataharu,
                         "student_list": non_generated,
                         "check_value": check_value,
