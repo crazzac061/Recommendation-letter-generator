@@ -9,27 +9,27 @@
       {% csrf_token %}
         <div class="user-details">
           <div class="input-box">
-            <span class="details">Requesting University</span>
+            <span class="details">Requesting University *</span>
             <input type="text" placeholder="University Name" name="university" required>
           </div>
 
           <div class="input-box">
-            <span class="details">Program Applied</span>
+            <span class="details">Program Applied *</span>
             <input type="text" placeholder="Program Applied" name="program_applied" required>
           </div>
 
           <div class="input-box">
-            <span class="details">Deadline</span>
+            <span class="details">Deadline *</span>
               <input type="date" name="deadline" required>
             </div>
 
           <div class="input-box">
-            <span class="details">GPA:</span>
+            <span class="details">GPA: *</span>
             <input type="text" name="gpa" required>
           </div>
 
           <div class="input-box">
-            <span class="details">Tentative Ranking</span>
+            <span class="details">Tentative Ranking *</span>
             <select name="tentative_ranking" required>
               <option></option>
               <option>Batch Topper</option>
@@ -42,17 +42,17 @@
           </div>
 
           <div class="input-box">
-              <span class="details">Transcript</span>
+              <span class="details">Transcript *</span>
               <input type="file" name="transcript" required>
           </div>
 
             <div class="input-box">
-                <span class="details">Recent CV</span>
+                <span class="details">Recent CV *</span>
                   <input type="file" name="cv" required>
                 </div>
                 
                 <div class="input-box">
-                  <span class="details">Photo</span>
+                  <span class="details">Photo *</span>
                   <input type="file" name="photo" required>
                 </div>
                 
@@ -66,10 +66,20 @@
                   </select>
                 </div> -->
                 
-                <div class="input-box">
-                  <span class="details">Extracurricular Activities</span>
-                    <input type="text" name="extraCurricular" required>
-                  </span>
+              <style>
+                .input-box textarea {
+                  width: 150%;
+                  padding: 10px;
+                  border: 1px solid #ccc;
+                  border-radius: 5px;
+                  font-size: 16px;
+                  resize: vertical; /* Allows the user to resize the textarea vertically but not horizontally */
+                }
+              </style>
+              
+              <div class="input-box">
+                <span class="details">Extracurricular Activities *</span>
+                <textarea name="extraCurricular" rows="5" required></textarea>
               </div>
              
               <!-- <div class="input-box">

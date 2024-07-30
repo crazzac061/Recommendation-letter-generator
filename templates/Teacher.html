@@ -43,12 +43,20 @@
         <tr>
           <th>Name</th>
           <th>Email</th>
+          <th>Letter</th>
         </tr>
         {% for item in all_students %}
         <tr>
           <td class="fs-5">{{ item.name }}</td>
           <td class="fs-5">{{ item.email }}</td>
-        </tr>
+          <td>
+            <form action='/studentfinal' method='POST'>
+              {% csrf_token %}
+              <button class="btn btn-primary" type='submit' value="{{ item.std.roll_number }}_{{ item.professor.name }}" name="id">
+                View
+              </button>
+            </form>
+          </td>
         {% endfor %}
       </tbody>
     </table>

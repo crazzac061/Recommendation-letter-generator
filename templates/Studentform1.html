@@ -21,12 +21,12 @@
             <input type="text" placeholder="University Name" name="university" required>
           </div> -->
           <div class="input-box">
-            <span class="details">Campus Mail</span>
+            <span class="details">Campus Mail *</span>
             <input type="email" placeholder="Email" name="email" required>
           </div>
 
           <div class="input-box">
-            <span class="details">Requesting Professor</span>
+            <span class="details">Requesting Professor *</span>
              <select name="prof" id="teacher" required>
                <option>---</option>
                {% for teacher in teachers %}
@@ -36,7 +36,7 @@
            </div>
 
           <div class="input-box">
-          <span class="details">Years professor has known you for:</span>
+          <span class="details">Years professor has known you for: *</span>
             <!-- <input type="text" placeholder="Choose Professor" required> -->
             <select name="yrs" required>
               <option></option>
@@ -50,8 +50,8 @@
           <div class="input-box" >
           <div class="multiselect">
           <div class="selectBox" onclick="showCheckboxes()" >
-           <span class="details">Subjects</span>
-            <select name="subject" id="subject"  >
+           <span class="details">Subjects *</span>
+            <select name="subject" id="subject"  required>
             </select>
             <div class="overSelect"></div>
           </div>
@@ -63,12 +63,12 @@
         </div>
 
           <div class="input-box">
-            <span class="details">Final Year Project:</span>
+            <span class="details">Final Year Project: *</span>
             <input type="text" name="sproject" required>
           </div>
 
           <div class="input-box">
-            <span class="details">He/she supervised Final Project?</span>
+            <span class="details">He/she supervised Final Project? *</span>
             <select name="is_project" required>
               <option>Yes</option>
               <option>No</option>
@@ -81,7 +81,7 @@
           </div>
 
           <div class="input-box">
-            <span class="details">Paper Published</span>
+            <span class="details">Paper Published *</span>
             <select name="has_paper" required>
               <option></option>
               <option>Yes</option>

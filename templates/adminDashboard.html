@@ -8,7 +8,7 @@
 </svg>
 {% if messages %}
 {% for message in messages %}
-<div class="alert alert-danger d-flex align-items-center" role="alert">
+<div class="alert alert-success d-flex align-items-center" role="alert">
     <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
     <div>
         {{ message }}
@@ -88,6 +88,34 @@
                     <button class="login100-form-btn">Add Teacher</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="mt-5">
+            <h3>Professors List</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Professor Name</th>
+                        <th scope="col">Username</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if professors %}
+                    {% for name, username in professors.items %}
+                    <tr>
+                        <td>{{ name }}</td>
+                        <td>{{ username }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="2">No professors found.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

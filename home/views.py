@@ -15,6 +15,7 @@ from .forms import TeacherInfoForm
 from django.contrib import messages
 import random
 import json
+from collections import OrderedDict
 
 
 # imports from xhtml
@@ -656,6 +657,8 @@ def studentform2(request):
 
         info = Application.objects.get(std__username = naam ,professor__name = prof_name )
 
+        info.is_generated = False
+        info.save()
 
         uni_info = University(
             uni_name = uuni,
@@ -1725,10 +1728,11 @@ def adminDashboard(request):
             teacher_info = form.save(commit=False)
             teacher_info.unique_id = unique_id
             teacher_info.save()
-            
+
+            uname = teacher_info.name.lower().replace('dr. ', '').replace(' ', '') + "_" + unique_id
             # Create corresponding User with a password
             user = User.objects.create_user(
-                username=f"{teacher_info.name.lower().replace(' ', '')}_{unique_id}",
+                username=uname,
                 password=form.cleaned_data['password'],  # Password is taken from the cleaned data
                 first_name=teacher_info.name,
                 last_name= '/' + unique_id
@@ -1740,6 +1744,7 @@ def adminDashboard(request):
             form.save_m2m()
             
             messages.success(request, 'Teacher added successfully!')
+
             return redirect('adminDashboard')
         else:
             messages.error(request, 'An error occurred while adding the teacher. Please try again.')
@@ -1750,9 +1755,20 @@ def adminDashboard(request):
     # Query departments and subjects for the form
     departments = Department.objects.all()
     subjects = Subject.objects.all()
+    teachers = TeacherInfo.objects.all()
     
+    # make username dic of all teachers
+    teacher_usernames = {}
+    for teacher in teachers:
+        teacher_usernames[teacher.name] = f"{teacher.name.lower().replace('dr. ', '').replace(' ', '')}_{teacher.unique_id}"
+    
+
+#reverse the order of elements in the dict 
+    reversed_teacher_usernames = OrderedDict(reversed(list(teacher_usernames.items())))
+
     return render(request, 'adminDashboard.html', {
         'form': form,
         'departments': departments,
-        'subjects': subjects
+        'subjects': subjects,
+        'professors': reversed_teacher_usernames
     })
