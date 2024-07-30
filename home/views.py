@@ -1595,6 +1595,26 @@ def renderCustom(request):
         else:
             value=False
 
+        if template_name == 'default':
+            print('sending test.html file')
+            return render(request, 
+                        "test.html", 
+                        {
+                            "student": application,
+                            'subjects':subjects,
+                            'subject':subject,
+                            'value':value , 
+                            'firstname':firstname,
+                            "paper": paper,
+                            "project": project,
+                            "university": university,
+                            "quality": quality,
+                            "academics": academics,
+                            "teacher": teacher_name,
+                            "files": files, 
+                        }
+                    )
+
         from jinja2 import Template
 
 
