@@ -407,44 +407,23 @@ def loginStudent(request):
                 messages.error(request, "Sorry!  The Credentials doesn't match.")
                 return render(request, "loginStudent.html")
             teachers = TeacherInfo.objects.filter(department=student.department)
+
+
             if Application.objects.filter(std__username=naam).exists():                 #std is foreign key for StudentLoginInfo
                 appli = Application.objects.filter(std__username=naam)
-                if appli[0].is_generated: 
-                    response = render(
+            else:
+                appli = {}
+            response = render(
                         request,
                         "student_success.html",
                         {
                             "naam": student.username,
                             "roll": student.roll_number,
-                            "letter": appli[0].is_generated,
+                            "letter": True,
                             'applications': appli
                         },
                     )
-                    
-                else:
-                    messages.error(request, "You are succesfully logged in.")
-                    response =  render(
-                        request,
-                        "Studentform1.html",
-                        {
-                            "naam": student.username,
-                            "teachers": teachers,
-                            "roll": student.roll_number,
-                        },
-                    )
 
-            else:
-                messages.error(request, "You are succesfully logged in.")
-                response =  render(
-                    request,
-                    "Studentform1.html",
-                    {
-                        "naam": student.username,
-                        "teachers": teachers,
-                        "roll": student.roll_number,
-                    },
-                )
-                
             response.set_cookie('student', student)
             return response
 
@@ -454,6 +433,53 @@ def loginStudent(request):
         
     
     return render(request, "loginStudent.html")
+            # if Application.objects.filter(std__username=naam).exists():                 #std is foreign key for StudentLoginInfo
+            #     appli = Application.objects.filter(std__username=naam)
+            #     if appli[0].is_generated: 
+            #         response = render(
+            #             request,
+            #             "student_success.html",
+            #             {
+            #                 "naam": student.username,
+            #                 "roll": student.roll_number,
+            #                 "letter": appli[0].is_generated,
+            #                 'applications': appli
+            #             },
+            #         )
+                    
+            #     else:
+            #         messages.error(request, "You are succesfully logged in.")
+            #         response =  render(
+            #             request,
+            #             "Studentform1.html",
+            #             {
+            #                 "naam": student.username,
+            #                 "teachers": teachers,
+            #                 "roll": student.roll_number,
+            #             },
+            #         )
+
+            # else:
+            #     messages.error(request, "You are succesfully logged in.")
+            #     response =  render(
+            #         request,
+            #         "Studentform1.html",
+            #         {
+            #             "naam": student.username,
+            #             "teachers": teachers,
+            #             "roll": student.roll_number,
+            #         },
+            #     )
+                
+    #         response.set_cookie('student', student)
+    #         return response
+
+    #     else:
+    #         messages.error(request, "Sorry!  The Credentials doesn't match.")
+    #         return render(request, "loginStudent.html")
+        
+    
+    # return render(request, "loginStudent.html")
 #now check studentform1.html 
 
 
@@ -629,168 +655,168 @@ def studentform1(request):
 
 def studentform2(request):
 
-    if request.method == "POST":
-        uroll = request.POST.get("roll")
-        naam = request.POST.get("naam")
-        prof_name = request.POST.get("prof_name")
-        aca_gpa = request.POST.get("gpa")
-        aca_ranking = request.POST.get("tentative_ranking")
-        file_transcript = request.FILES.get("transcript")
-        file_cv = request.FILES.get("cv")
-        file_photo = request.FILES.get('photo')
-        extra = request.POST.get('extraCurricular')
-
-        universities = request.POST.getlist("universities")
-        programs_applied = request.POST.getlist("programs_applied")
-        deadlines = request.POST.getlist("deadlines")
-
-        info = Application.objects.get(std__username=naam, professor__name=prof_name)
-        info.is_generated = False
-        info.save()
-
-        if University.objects.filter(application=info).exists():
-            University.objects.filter(application=info).delete()
-
-        for i in range(len(universities)):
-            uni_info = University(
-                uni_name=universities[i],
-                uni_deadline=deadlines[i],
-                program_applied=programs_applied[i],
-                application=info,
-            )
-            uni_info.save()
-
-        if Academics.objects.filter(application=info).exists():
-            Academics.objects.filter(application=info).delete()
-
-        academics_info = Academics(
-            gpa=aca_gpa,
-            tentative_ranking=aca_ranking,
-            application=info,
-        )
-        academics_info.save()
-
-        if Files.objects.filter(application=info).exists():
-            Files.objects.filter(application=info).delete()
-
-        file_info = Files(
-            transcript=file_transcript,
-            CV=file_cv,
-            Photo=file_photo,
-            application=info,
-        )
-        file_info.save()
-
-        if Qualities.objects.filter(application=info).exists():
-            Qualities.objects.filter(application=info).delete()
-
-        qualities_info = Qualities(
-            extracirricular=extra,
-            application=info,
-        )
-        qualities_info.save()
-
-        send_mail(
-            'Application for recommendation letter',
-            f'Dear sir,\n {naam} has sent an application in Recommendation Letter Generator. Nearest Deadline is {deadlines[0]}. Please log in to generate the letter.\n Link: http://recommendation-generator.bct.itclub.pp.ua/',
-            'ioerecoletter@gmail.com',
-            [info.professor.email],
-            fail_silently=False,
-        )
-
-    return render(request, "student_success.html", {'roll': uroll, 'letter': False, 'naam': naam})
-
-    # if request.method == "POST" :
+    # if request.method == "POST":
     #     uroll = request.POST.get("roll")
-
     #     naam = request.POST.get("naam")
     #     prof_name = request.POST.get("prof_name")
-
-    #     uuni = request.POST.get("university")
-    #     uni_program = request.POST.get("program_applied")
-    #     uni_deadline = request.POST.get("deadline")
     #     aca_gpa = request.POST.get("gpa")
     #     aca_ranking = request.POST.get("tentative_ranking")
     #     file_transcript = request.FILES.get("transcript")
     #     file_cv = request.FILES.get("cv")
     #     file_photo = request.FILES.get('photo')
-    #     #presentation= request.POST.get('presentation')
-    #     extra = request.POST.get('eca')
-    #     #quality = request.POST.get('qual')
+    #     extra = request.POST.get('extraCurricular')
 
+    #     universities = request.POST.getlist("universities")
+    #     programs_applied = request.POST.getlist("programs_applied")
+    #     deadlines = request.POST.getlist("deadlines")
 
-    #     # leaders = request.POST.get('quality1')
-    #     # hardwork = request.POST.get('quality2')
-    #     # social = request.POST.get('quality3')
-    #     # teamwork = request.POST.get('quality4')
-    #     # friendly = request.POST.get('quality5')
-
-
-
-    #     info = Application.objects.get(std__username = naam ,professor__name = prof_name )
-
+    #     info = Application.objects.get(std__username=naam, professor__name=prof_name)
     #     info.is_generated = False
     #     info.save()
 
-    #     uni_info = University(
-    #         uni_name = uuni,
-    #         uni_deadline = uni_deadline,
-    #         program_applied = uni_program,
-    #         application = info,
-    #     )
-    #     if University.objects.filter(application = info).exists():
-    #         uni = University.objects.get(application=info)
-    #         uni.delete()
-            
-    #     uni_info.save()
+    #     if University.objects.filter(application=info).exists():
+    #         University.objects.filter(application=info).delete()
+
+    #     for i in range(len(universities)):
+    #         uni_info = University(
+    #             uni_name=universities[i],
+    #             uni_deadline=deadlines[i],
+    #             program_applied=programs_applied[i],
+    #             application=info,
+    #         )
+    #         uni_info.save()
+
+    #     if Academics.objects.filter(application=info).exists():
+    #         Academics.objects.filter(application=info).delete()
 
     #     academics_info = Academics(
-    #         gpa = aca_gpa,
-    #         tentative_ranking = aca_ranking,
-    #         application  = info,
+    #         gpa=aca_gpa,
+    #         tentative_ranking=aca_ranking,
+    #         application=info,
     #     )
-        
-    #     if Academics.objects.filter(application = info ).exists():
-    #         academic = Academics.objects.get(application = info )
-    #         academic.delete()
-            
     #     academics_info.save()
 
+    #     if Files.objects.filter(application=info).exists():
+    #         Files.objects.filter(application=info).delete()
+
     #     file_info = Files(
-    #         transcript = file_transcript,
-    #         CV = file_cv,
-    #         Photo = file_photo,
-    #         application = info,
+    #         transcript=file_transcript,
+    #         CV=file_cv,
+    #         Photo=file_photo,
+    #         application=info,
     #     )
-        
-    #     if Files.objects.filter(application = info ).exists():
-    #         file = Files.objects.get(application = info )
-    #         file.delete()
-            
     #     file_info.save()
 
+    #     if Qualities.objects.filter(application=info).exists():
+    #         Qualities.objects.filter(application=info).delete()
+
     #     qualities_info = Qualities(
-    #         # leadership = True if leaders == "on" else False,
-    #         # hardworking = True if hardwork == "on" else False,
-    #         # social = True if social == "on" else False,
-    #         # teamwork = True if teamwork == "on" else False,
-    #         # friendly =True if friendly == "on" else False,
-    #         # quality = quality,
-    #         # presentation = presentation,
-    #         extracirricular = extra,
-    #         application = info ,
+    #         extracirricular=extra,
+    #         application=info,
     #     )
-        
-    #     if Qualities.objects.filter(application = info ).exists():
-    #         quality = Qualities.objects.get(application = info )
-    #         quality.delete()
-            
     #     qualities_info.save()
 
-    #     send_mail('Application for recommendation letter', f'Dear sir,\n {naam} has send application in Recommendation Letter Generator. Nearest Deadline is {uni_deadline}. Please log in to generate the letter.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/', 'ioerecoletter@gmail.com', [info.professor.email], fail_silently=False)
+    #     send_mail(
+    #         'Application for recommendation letter',
+    #         f'Dear sir,\n {naam} has sent an application in Recommendation Letter Generator. Nearest Deadline is {deadlines[0]}. Please log in to generate the letter.\n Link: http://recommendation-generator.bct.itclub.pp.ua/',
+    #         'ioerecoletter@gmail.com',
+    #         [info.professor.email],
+    #         fail_silently=False,
+    #     )
+
+    # return render(request, "student_success.html", {'roll': uroll, 'letter': False, 'naam': naam})
+
+    if request.method == "POST" :
+        uroll = request.POST.get("roll")
+
+        naam = request.POST.get("naam")
+        prof_name = request.POST.get("prof_name")
+
+        uuni = request.POST.get("university")
+        uni_program = request.POST.get("program_applied")
+        uni_deadline = request.POST.get("deadline")
+        aca_gpa = request.POST.get("gpa")
+        aca_ranking = request.POST.get("tentative_ranking")
+        file_transcript = request.FILES.get("transcript")
+        file_cv = request.FILES.get("cv")
+        file_photo = request.FILES.get('photo')
+        #presentation= request.POST.get('presentation')
+        extra = request.POST.get('eca')
+        #quality = request.POST.get('qual')
 
 
-    # return render(request, "student_success.html",{'roll':uroll, 'letter' : False, 'naam' : naam})
+        # leaders = request.POST.get('quality1')
+        # hardwork = request.POST.get('quality2')
+        # social = request.POST.get('quality3')
+        # teamwork = request.POST.get('quality4')
+        # friendly = request.POST.get('quality5')
+
+
+
+        info = Application.objects.get(std__username = naam ,professor__name = prof_name )
+
+        info.is_generated = False
+        info.save()
+
+        uni_info = University(
+            uni_name = uuni,
+            uni_deadline = uni_deadline,
+            program_applied = uni_program,
+            application = info,
+        )
+        if University.objects.filter(application = info).exists():
+            uni = University.objects.get(application=info)
+            uni.delete()
+            
+        uni_info.save()
+
+        academics_info = Academics(
+            gpa = aca_gpa,
+            tentative_ranking = aca_ranking,
+            application  = info,
+        )
+        
+        if Academics.objects.filter(application = info ).exists():
+            academic = Academics.objects.get(application = info )
+            academic.delete()
+            
+        academics_info.save()
+
+        file_info = Files(
+            transcript = file_transcript,
+            CV = file_cv,
+            Photo = file_photo,
+            application = info,
+        )
+        
+        if Files.objects.filter(application = info ).exists():
+            file = Files.objects.get(application = info )
+            file.delete()
+            
+        file_info.save()
+
+        qualities_info = Qualities(
+            # leadership = True if leaders == "on" else False,
+            # hardworking = True if hardwork == "on" else False,
+            # social = True if social == "on" else False,
+            # teamwork = True if teamwork == "on" else False,
+            # friendly =True if friendly == "on" else False,
+            # quality = quality,
+            # presentation = presentation,
+            extracirricular = extra,
+            application = info ,
+        )
+        
+        if Qualities.objects.filter(application = info ).exists():
+            quality = Qualities.objects.get(application = info )
+            quality.delete()
+            
+        qualities_info.save()
+
+        send_mail('Application for recommendation letter', f'Dear sir,\n {naam} has send application in Recommendation Letter Generator. Nearest Deadline is {uni_deadline}. Please log in to generate the letter.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/', 'ioerecoletter@gmail.com', [info.professor.email], fail_silently=False)
+
+
+    return render(request, "student_success.html",{'roll':uroll, 'letter' : False, 'naam' : naam})
 
 
 
