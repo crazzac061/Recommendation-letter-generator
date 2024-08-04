@@ -493,9 +493,9 @@ def make_letter(request):
         stu = StudentLoginInfo.objects.get(roll_number=roll)
         appli = Application.objects.get(name=stu.username, professor__unique_id=teacher_id)
         paper = Paper.objects.get(application=appli)
-        project = Project.objects.filter(application = appli)
+        project = Project.objects.get(application = appli)
 
-        universities = University.objects.filter(application=appli)
+        university = University.objects.get(application=appli)
         quality = Qualities.objects.get(application=appli)
         academics = Academics.objects.get(application=appli)
         files = Files.objects.get(application=appli)
@@ -503,6 +503,8 @@ def make_letter(request):
         templates = CustomTemplates.objects.filter(professor = appli.professor)
 
         teacher_name = appli.professor.name
+
+
 
         return render(
             request,
@@ -512,7 +514,7 @@ def make_letter(request):
                 "roll": roll,
                 "paper": paper,
                 "project": project,
-                "universities": universities,
+                "university": university,
                 "quality": quality,
                 "academics": academics,
                 "teacher": teacher_name,
