@@ -3,6 +3,11 @@
 
 {% block body %}
 
+ <!-- Recommendation letter is confidential,
+   so, it is not shown to the student. We had given option to view generated letter to student, 
+   but sir asked to remove it -->
+
+
 <div class="container">
    <div class="title">Hey {{naam}}!</div>
 
@@ -19,7 +24,7 @@
   <thead>
     <tr>
       <th>Application Name</th>
-      <th>Action</th>
+      
     </tr>
   </thead>
   <tbody>
@@ -27,15 +32,8 @@
     {% for application in applications %}
       {% if application.is_generated %}
       <tr>
-        <td>{{ application.professor.name }}</td>
-        <td>
-          <form action='/studentfinal' method='POST'>
-            {% csrf_token %}
-            <button class="btn btn-primary" type='submit' value="{{ roll }}_{{ application.professor.name }}" name="id">
-              View
-            </button>
-          </form>
-        </td>
+        <td>{{ application.professor.name }}</td>       
+       
       </tr>
       {% endif %}
     {% endfor %}

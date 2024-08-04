@@ -13,10 +13,6 @@
   <span class="details">You've known this student for: {{student.years_taught}}</span> <br />
   <span class="details">You've taught: {{student.subjects}}</span> <br />
 
-  <span class="details">University: {{university.uni_name}}</span> <br />
-  <span class="details">University Deadline: {{university.uni_deadline}}</span> <br />
-  <span class="details">Program Applied: {{university.program_applied}}</span> <br />
-
   <span class="details">GPA: {{academics.gpa}}</span> <br />
   <span class="details">Tentative Ranking: {{academics.tentative_ranking}}</span> <br />
 
@@ -24,8 +20,17 @@
   <br />
   
   <span class="details">Other projects: {{project.final_project}}</span>
-  <br />
   <br/>
+  <br/>
+  <h5>Universities Applied</h5>
+  {% for university in universities %}
+  <span class="details">University: {{university.uni_name}}</span> <br />
+  <span class="details">University Deadline: {{university.uni_deadline}}</span> <br />
+  <span class="details">Program Applied: {{university.program_applied}}</span> <br />
+  <br />
+  {% endfor %}
+  <br />
+
   <!-- Button trigger modal -->
 
 {% if files.transcript.url|lower|slice:'-4:' == '.pdf' %}

@@ -469,7 +469,7 @@ def make_letter(request):
         paper = Paper.objects.get(application=appli)
         project = Project.objects.filter(application = appli)
 
-        university = University.objects.get(application=appli)
+        universities = University.objects.filter(application=appli)
         quality = Qualities.objects.get(application=appli)
         academics = Academics.objects.get(application=appli)
         files = Files.objects.get(application=appli)
@@ -486,7 +486,7 @@ def make_letter(request):
                 "roll": roll,
                 "paper": paper,
                 "project": project,
-                "university": university,
+                "universities": universities,
                 "quality": quality,
                 "academics": academics,
                 "teacher": teacher_name,
@@ -628,94 +628,169 @@ def studentform1(request):
     return render(request, "loginStudent.html")
 
 def studentform2(request):
-    if request.method == "POST" :
-        uroll = request.POST.get("roll")
 
+    if request.method == "POST":
+        uroll = request.POST.get("roll")
         naam = request.POST.get("naam")
         prof_name = request.POST.get("prof_name")
-
-        uuni = request.POST.get("university")
-        uni_program = request.POST.get("program_applied")
-        uni_deadline = request.POST.get("deadline")
         aca_gpa = request.POST.get("gpa")
         aca_ranking = request.POST.get("tentative_ranking")
         file_transcript = request.FILES.get("transcript")
         file_cv = request.FILES.get("cv")
         file_photo = request.FILES.get('photo')
-        #presentation= request.POST.get('presentation')
-        extra = request.POST.get('eca')
-        #quality = request.POST.get('qual')
+        extra = request.POST.get('extraCurricular')
 
+        universities = request.POST.getlist("universities")
+        programs_applied = request.POST.getlist("programs_applied")
+        deadlines = request.POST.getlist("deadlines")
 
-        # leaders = request.POST.get('quality1')
-        # hardwork = request.POST.get('quality2')
-        # social = request.POST.get('quality3')
-        # teamwork = request.POST.get('quality4')
-        # friendly = request.POST.get('quality5')
-
-
-
-        info = Application.objects.get(std__username = naam ,professor__name = prof_name )
-
+        info = Application.objects.get(std__username=naam, professor__name=prof_name)
         info.is_generated = False
         info.save()
 
-        uni_info = University(
-            uni_name = uuni,
-            uni_deadline = uni_deadline,
-            program_applied = uni_program,
-            application = info,
-        )
-        if University.objects.filter(application = info).exists():
-            uni = University.objects.get(application=info)
-            uni.delete()
-            
-        uni_info.save()
+        if University.objects.filter(application=info).exists():
+            University.objects.filter(application=info).delete()
+
+        for i in range(len(universities)):
+            uni_info = University(
+                uni_name=universities[i],
+                uni_deadline=deadlines[i],
+                program_applied=programs_applied[i],
+                application=info,
+            )
+            uni_info.save()
+
+        if Academics.objects.filter(application=info).exists():
+            Academics.objects.filter(application=info).delete()
 
         academics_info = Academics(
-            gpa = aca_gpa,
-            tentative_ranking = aca_ranking,
-            application  = info,
+            gpa=aca_gpa,
+            tentative_ranking=aca_ranking,
+            application=info,
         )
-        
-        if Academics.objects.filter(application = info ).exists():
-            academic = Academics.objects.get(application = info )
-            academic.delete()
-            
         academics_info.save()
 
+        if Files.objects.filter(application=info).exists():
+            Files.objects.filter(application=info).delete()
+
         file_info = Files(
-            transcript = file_transcript,
-            CV = file_cv,
-            Photo = file_photo,
-            application = info,
+            transcript=file_transcript,
+            CV=file_cv,
+            Photo=file_photo,
+            application=info,
         )
-        
-        if Files.objects.filter(application = info ).exists():
-            file = Files.objects.get(application = info )
-            file.delete()
-            
         file_info.save()
 
+        if Qualities.objects.filter(application=info).exists():
+            Qualities.objects.filter(application=info).delete()
+
         qualities_info = Qualities(
-            # leadership = True if leaders == "on" else False,
-            # hardworking = True if hardwork == "on" else False,
-            # social = True if social == "on" else False,
-            # teamwork = True if teamwork == "on" else False,
-            # friendly =True if friendly == "on" else False,
-            # quality = quality,
-            # presentation = presentation,
-            extracirricular = extra,
-            application = info ,
+            extracirricular=extra,
+            application=info,
         )
-        
-        if Qualities.objects.filter(application = info ).exists():
-            quality = Qualities.objects.get(application = info )
-            quality.delete()
-            
         qualities_info.save()
 
-    return render(request, "student_success.html",{'roll':uroll, 'letter' : False, 'naam' : naam})
+        send_mail(
+            'Application for recommendation letter',
+            f'Dear sir,\n {naam} has sent an application in Recommendation Letter Generator. Nearest Deadline is {deadlines[0]}. Please log in to generate the letter.\n Link: http://recommendation-generator.bct.itclub.pp.ua/',
+            'ioerecoletter@gmail.com',
+            [info.professor.email],
+            fail_silently=False,
+        )
+
+    return render(request, "student_success.html", {'roll': uroll, 'letter': False, 'naam': naam})
+
+    # if request.method == "POST" :
+    #     uroll = request.POST.get("roll")
+
+    #     naam = request.POST.get("naam")
+    #     prof_name = request.POST.get("prof_name")
+
+    #     uuni = request.POST.get("university")
+    #     uni_program = request.POST.get("program_applied")
+    #     uni_deadline = request.POST.get("deadline")
+    #     aca_gpa = request.POST.get("gpa")
+    #     aca_ranking = request.POST.get("tentative_ranking")
+    #     file_transcript = request.FILES.get("transcript")
+    #     file_cv = request.FILES.get("cv")
+    #     file_photo = request.FILES.get('photo')
+    #     #presentation= request.POST.get('presentation')
+    #     extra = request.POST.get('eca')
+    #     #quality = request.POST.get('qual')
+
+
+    #     # leaders = request.POST.get('quality1')
+    #     # hardwork = request.POST.get('quality2')
+    #     # social = request.POST.get('quality3')
+    #     # teamwork = request.POST.get('quality4')
+    #     # friendly = request.POST.get('quality5')
+
+
+
+    #     info = Application.objects.get(std__username = naam ,professor__name = prof_name )
+
+    #     info.is_generated = False
+    #     info.save()
+
+    #     uni_info = University(
+    #         uni_name = uuni,
+    #         uni_deadline = uni_deadline,
+    #         program_applied = uni_program,
+    #         application = info,
+    #     )
+    #     if University.objects.filter(application = info).exists():
+    #         uni = University.objects.get(application=info)
+    #         uni.delete()
+            
+    #     uni_info.save()
+
+    #     academics_info = Academics(
+    #         gpa = aca_gpa,
+    #         tentative_ranking = aca_ranking,
+    #         application  = info,
+    #     )
+        
+    #     if Academics.objects.filter(application = info ).exists():
+    #         academic = Academics.objects.get(application = info )
+    #         academic.delete()
+            
+    #     academics_info.save()
+
+    #     file_info = Files(
+    #         transcript = file_transcript,
+    #         CV = file_cv,
+    #         Photo = file_photo,
+    #         application = info,
+    #     )
+        
+    #     if Files.objects.filter(application = info ).exists():
+    #         file = Files.objects.get(application = info )
+    #         file.delete()
+            
+    #     file_info.save()
+
+    #     qualities_info = Qualities(
+    #         # leadership = True if leaders == "on" else False,
+    #         # hardworking = True if hardwork == "on" else False,
+    #         # social = True if social == "on" else False,
+    #         # teamwork = True if teamwork == "on" else False,
+    #         # friendly =True if friendly == "on" else False,
+    #         # quality = quality,
+    #         # presentation = presentation,
+    #         extracirricular = extra,
+    #         application = info ,
+    #     )
+        
+    #     if Qualities.objects.filter(application = info ).exists():
+    #         quality = Qualities.objects.get(application = info )
+    #         quality.delete()
+            
+    #     qualities_info.save()
+
+    #     send_mail('Application for recommendation letter', f'Dear sir,\n {naam} has send application in Recommendation Letter Generator. Nearest Deadline is {uni_deadline}. Please log in to generate the letter.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/', 'ioerecoletter@gmail.com', [info.professor.email], fail_silently=False)
+
+
+    # return render(request, "student_success.html",{'roll':uroll, 'letter' : False, 'naam' : naam})
 
 
 
@@ -784,11 +859,14 @@ def loginTeacher(request):
             
     value = 0
     if request.method == "POST":
-        usern = request.POST.get("username")
+        email = request.POST.get("username")   
         passwo = request.POST.get("password")
         # check if user is real
-        if User.objects.filter(username__exact=usern).exists():
-            print('User object recognized')
+        if User.objects.filter(email__exact=email).exists():
+            print('User object with that email exist')
+            tempUser = User.objects.get(email__exact=email)
+
+            usern = tempUser.username
             user = authenticate(username=usern, password=passwo)
             if user is not None:
                 print("user authenticated")
@@ -1741,6 +1819,11 @@ def adminDashboard(request):
     if request.method == 'POST':
         form = TeacherInfoForm(request.POST, request.FILES)
         if form.is_valid():
+            email = request.POST.get('email')
+            if TeacherInfo.objects.filter(email=email).exists():
+                messages.warning(request, 'Another teacher with the same email already exists.')
+                return redirect('adminDashboard')
+            
             unique_id = generate_unique_id()
             while TeacherInfo.objects.filter(unique_id=unique_id).exists():
                 unique_id = generate_unique_id()
@@ -1749,13 +1832,18 @@ def adminDashboard(request):
             teacher_info.unique_id = unique_id
             teacher_info.save()
 
+
+            # Check if other teacher has same email
+
             uname = teacher_info.name.lower().replace('dr. ', '').replace(' ', '') + "_" + unique_id
             # Create corresponding User with a password
             user = User.objects.create_user(
                 username=uname,
                 password=form.cleaned_data['password'],  # Password is taken from the cleaned data
                 first_name=teacher_info.name,
-                last_name= '/' + unique_id
+                last_name= '/' + unique_id             # 78batch: seniors had made to input last name as /unique id
+                                                        # so, we had to continue with this( lazy us). You guys can change it. 
+                                                        # we leave this for you. Otherwise works completely fine. Better not touch it.
             )
             user.email = teacher_info.email
             user.save()
@@ -1764,6 +1852,8 @@ def adminDashboard(request):
             form.save_m2m()
             
             messages.success(request, 'Teacher added successfully!')
+            send_mail('Account Created Successfully', f'Dear sir,\n  Your account has been created in Recommendation Letter Generator. Your username is {uname}. Please login to verify. If you get any problem please contact us.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/', 'ioerecoletter@gmail.com', [teacher_info.email], fail_silently=False)
+
 
             return redirect('adminDashboard')
         else:
