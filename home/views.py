@@ -504,7 +504,7 @@ def make_letter(request):
 
         teacher_name = appli.professor.name
 
-
+        
 
         return render(
             request,

@@ -130,7 +130,7 @@ class Qualities(models.Model):
     
     quality= models.CharField(max_length=50,null=True,blank=True)
     presentation= models.CharField(max_length=50,null=True,blank=True)
-    extracirricular= models.CharField(max_length=50,null=True,blank=True)
+    extracirricular= models.CharField(max_length=500,null=True,blank=True)
 
     recommend = models.CharField(max_length=50,null=True,blank=True)
 
