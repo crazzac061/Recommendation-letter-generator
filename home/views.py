@@ -36,7 +36,7 @@ from django.core.mail import mail_admins
 
 # to create random number for OTP
 from random import randint
-
+from pdf2docx import Converter
 # Create your views here.
 
 
@@ -186,6 +186,17 @@ def text_to_pdf(text,roll, name):
 
 
     pdf.output("media/letter/"+roll+'_'+name+".pdf", "F")
+    print("pdf generated")
+
+    # docx_path = os.path.join(settings.MEDIA_ROOT, "letter", f"{roll}_{name}.docx")
+    cv = Converter("media/letter/"+roll+'_'+name+".pdf")
+    cv.convert("media/docs/" + roll + "_"+name + ".docx", start=0, end=None)
+    print("docx generated")
+    cv.close()
+
+    # Return download link for the DOCX file
+
+
 
 
 import re
@@ -211,13 +222,22 @@ def final(request, *args, **kwargs):
         application.is_generated = True
         application.save() 
         messages.error(request, "Sorry!  The Credentials doesn't match.")
-        send_mail('Recommendation Letter', 'Dear sir, Please find the recommendation letter attached with this mail. Link: http://recommendation-generator.bct.itclub.pp.ua/', 'ioerecoletter@gmail.com', [application.email], fail_silently=False)
+        send_mail('Recommendation Letter', 'Dear sir, \n Your letter has been generated your letter of recommendation. \n \n Best Regards, \n Ioe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [application.email], fail_silently=False)
         return redirect("media/letter/"+roll+"_"+ application.professor.name +".pdf")
 
 def studentfinal(request, *args, **kwargs):
     if request.method == "POST":
-        letter_name = request.POST.get("id")
-    return redirect("media/letter/"+letter_name+".pdf")
+        pdf_or_docs = request.POST.get("id")
+        roll = request.POST.get("roll")
+        prof = request.POST.get('prof_name')
+
+        if pdf_or_docs == 'pdf':
+            return redirect("media/letter/"+roll+"_"+prof+".pdf")
+        else: 
+            try:
+                return redirect("media/docs/"+roll+"_"+prof+".docx")
+            except:
+                return redirect("media/letter/"+roll+"_"+prof+".pdf")
 
 def registerStudent(request):
     departments = Department.objects.all().values()
@@ -815,7 +835,7 @@ def studentform2(request):
             
         qualities_info.save()
 
-        send_mail('Application for recommendation letter', f'Dear sir,\n {naam} has send application in Recommendation Letter Generator. Nearest Deadline is {uni_deadline}. Please log in to generate the letter.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/', 'ioerecoletter@gmail.com', [info.professor.email], fail_silently=False)
+        send_mail('Application for recommendation letter', f'Dear sir,\n {naam} has send application in Recommendation Letter Generator. Nearest Deadline is {uni_deadline}. Please log in to generate the letter.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/  \n\nBest Regards,\nIoe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [info.professor.email], fail_silently=False)
 
 
     return render(request, "student_success.html",{'roll':uroll, 'letter' : False, 'naam' : naam})
@@ -1880,7 +1900,7 @@ def adminDashboard(request):
             form.save_m2m()
             
             messages.success(request, 'Teacher added successfully!')
-            send_mail('Account Created Successfully', f'Dear sir,\n  Your account has been created in Recommendation Letter Generator. Your username is {uname}. Please login to verify. If you get any problem please contact us.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/', 'ioerecoletter@gmail.com', [teacher_info.email], fail_silently=False)
+            send_mail('Account Created Successfully', f'Dear sir,\n  Your account has been created in Recommendation Letter Generator. Your username is {uname}. Please login to verify. If you get any problem please contact us.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/  \n \nBest Regards, \nIoe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [teacher_info.email], fail_silently=False)
 
 
             return redirect('adminDashboard')

@@ -52,9 +52,16 @@
           <td>
             <form action='/studentfinal' method='POST'>
               {% csrf_token %}
-              <button class="btn btn-primary" type='submit' value="{{ item.std.roll_number }}_{{ item.professor.name }}" name="id">
-                View
+              <button class="btn btn-primary" type='submit' value="pdf" name="id">
+                View pdf
               </button>
+
+              <button class="btn btn-primary" type='submit' value="docs" name="id">
+                Download docx
+              </button>
+
+              <input type = 'hidden' value="{{ item.std.roll_number }}" name="roll">
+              <input type= "hidden" value="{{ item.professor.name }}" name="prof_name">
             </form>
           </td>
         {% endfor %}
