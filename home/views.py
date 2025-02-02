@@ -222,7 +222,7 @@ def final(request, *args, **kwargs):
         application.is_generated = True
         application.save() 
         messages.error(request, "Sorry!  The Credentials doesn't match.")
-        send_mail('Recommendation Letter', 'Dear sir, \n Your letter has been generated your letter of recommendation. \n \n Best Regards, \n Ioe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [application.email], fail_silently=False)
+        send_mail('Recommendation Letter', 'Dear sir, \n Your letter has been generated your letter of recommendation. \n \n Best Regards, \n Ioe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [application.email], fail_silently=True)
         return redirect("media/letter/"+roll+"_"+ application.professor.name +".pdf")
 
 def studentfinal(request, *args, **kwargs):
@@ -835,7 +835,7 @@ def studentform2(request):
             
         qualities_info.save()
 
-        send_mail('Application for recommendation letter', f'Dear sir,\n {naam} has send application in Recommendation Letter Generator. Nearest Deadline is {uni_deadline}. Please log in to generate the letter.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/  \n\nBest Regards,\nIoe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [info.professor.email], fail_silently=False)
+        send_mail('Application for recommendation letter', f'Dear sir,\n {naam} has send application in Recommendation Letter Generator. Nearest Deadline is {uni_deadline}. Please log in to generate the letter.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/  \n\nBest Regards,\nIoe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [info.professor.email], fail_silently=True)
 
 
     return render(request, "student_success.html",{'roll':uroll, 'letter' : False, 'naam' : naam})
