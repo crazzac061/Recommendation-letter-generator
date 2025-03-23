@@ -43,17 +43,17 @@
 
           <div class="input-box">
               <span class="details">Transcript *</span>
-              <input type="file" name="transcript" required>
+              <input type="file" name="transcript" accept=".pdf, .doc, .docx" required>
           </div>
 
             <div class="input-box">
                 <span class="details">Recent CV *</span>
-                  <input type="file" name="cv" required>
+                  <input type="file" name="cv" accept=".pdf, .doc, .docx" required>
                 </div>
                 
                 <div class="input-box">
                   <span class="details">Photo *</span>
-                  <input type="file" name="photo" required>
+                  <input type="file" name="photo" accept=".jpg, .jpeg, .png"  required>
                 </div>
                 
                 <!-- <div class="input-box">
@@ -153,4 +153,48 @@
   </div>
 
   
+  <script>
+    // Set the maximum allowed file sizes (in bytes)
+    const maxTranscriptSize = 5 * 1024 * 1024;  // 5MB
+    const maxCVSize = 5 * 1024 * 1024;         // 5MB
+    const maxPhotoSize = 3 * 1024 * 1024;      // 3MB
+
+    // Get the form and submit button
+    const form = document.querySelector("form");
+    const submitBtn = document.querySelector("input[type='submit']");
+
+    // Listen for form submission
+    form.addEventListener("submit", function(event) {
+        // Get the files from the input fields
+        const transcriptFile = document.querySelector('input[name="transcript"]').files[0];
+        const cvFile = document.querySelector('input[name="cv"]').files[0];
+        const photoFile = document.querySelector('input[name="photo"]').files[0];
+
+        // Check the size of the transcript file
+        if (transcriptFile && transcriptFile.size > maxTranscriptSize) {
+            alert("Transcript file size exceeds the 5MB limit.");
+            event.preventDefault();  // Prevent form submission
+            return;
+        }
+
+        // Check the size of the CV file
+        if (cvFile && cvFile.size > maxCVSize) {
+            alert("CV file size exceeds the 5MB limit.");
+            event.preventDefault();  // Prevent form submission
+            return;
+        }
+
+        // Check the size of the photo file
+        if (photoFile && photoFile.size > maxPhotoSize) {
+            alert("Photo file size exceeds the 3MB limit.");
+            event.preventDefault();  // Prevent form submission
+            return;
+        }
+
+        // If all files are within size limits, allow form submission
+    });
+</script>
+
+
+
 {% endblock body %}

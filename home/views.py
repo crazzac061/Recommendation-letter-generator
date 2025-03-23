@@ -696,6 +696,10 @@ def studentform1(request):
     return render(request, "loginStudent.html")
 
 def studentform2(request):
+    # Define max file size in bytes
+    MAX_CV_SIZE = 5 * 1024 * 1024  # 10MB
+    MAX_TRANSCRIPT_SIZE = 5 * 1024 * 1024  # 10MB
+    MAX_PHOTO_SIZE = 3 * 1024 * 1024  # 3MB
 
     # if request.method == "POST":
     #     uroll = request.POST.get("roll")
@@ -792,6 +796,16 @@ def studentform2(request):
         # social = request.POST.get('quality3')
         # teamwork = request.POST.get('quality4')
         # friendly = request.POST.get('quality5')
+        
+        # File size validation
+        if file_transcript and file_transcript.size > MAX_TRANSCRIPT_SIZE:
+            return render(request, "studentform.html", {"error": "Transcript file size exceeds the limit of 5MB."})
+        
+        if file_cv and file_cv.size > MAX_CV_SIZE:
+            return render(request, "studentform.html", {"error": "CV file size exceeds the limit of 5MB."})
+        
+        if file_photo and file_photo.size > MAX_PHOTO_SIZE:
+            return render(request, "studentform.html", {"error": "Photo file size exceeds the limit of 3MB."})
 
 
 
