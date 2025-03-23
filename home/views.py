@@ -1456,21 +1456,16 @@ def deleteSubjects(request):
         subject= request.POST.get("subject")
         usernaam = request.COOKIES.get("username")
 
-        user = User.objects.get(username=usernaam)
-        full_name = user.get_full_name()
-        x = full_name.split("/")
-
-        unique = x[-1]
-      
+        unique = request.COOKIES.get("unique")
         if TeacherInfo.objects.filter(unique_id=unique).exists():
             teacher = TeacherInfo.objects.get(unique_id=unique)
-            naya_subject=Subject.objects.get(name=subject)
+            naya_subject=Subject.objects.get(sub_name=subject)
 
             # to check if subject is in teacher model or not
             check=[]
             subjects=teacher.subjects.all()
             for i in subjects:
-                check.append(i.name)
+                check.append(i.sub_name)
             if subject not in check:
                
                 messages.error(request, "Subject does not exists.")
