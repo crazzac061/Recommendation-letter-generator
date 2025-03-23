@@ -105,43 +105,53 @@
             <input type="url" placeholder="Enter LinkedIn Profile Link" name="linkedIn" />
           </div>
 
-          
-
           <div class="gender-details">
-          <span class="gender-title">Other</span>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="deploy" id="flexCheckDefault" />
-            <label class="form-check-label" for="flexCheckDefault">
-              Deployed a Project
-            </label>
+            <span class="gender-title">Other</span>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="deploy" id="flexCheckDefault" />
+              <label class="form-check-label" for="flexCheckDefault">
+                Deployed a Project
+              </label>
+            </div>
+            
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="intern" id="flexCheckDefault" />
+              <label class="form-check-label" for="flexCheckDefault">
+                Done internship
+              </label>
+            </div>
           </div>
           
 
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="intern" id="flexCheckDefault" />
-            <label class="form-check-label" for="flexCheckDefault">
-              Done internship
-            </label>
-          </div>
-          </div>
-
+          
           <!-- Personal Statement -->
-           
-          <div class="input-box" style="width: 100%; clear: both;">
+          <style>
+            .input-box textarea {
+              width: 100%;
+              padding: 10px;
+              border: 1px solid #ccc;
+              border-radius: 5px;
+              font-size: 16px;
+              resize: vertical; /* Allows the user to resize the textarea vertically but not horizontally */
+            }
+          </style>
+          <div class="input-box">
             <span class="details">Personal Statement </span>
-            <textarea name="personal_statement" rows="10"   style="width: 100%; border: 1px solid #ccc; padding: 10px;"></textarea>
+            <textarea name="personal_statement" rows="5" ></textarea>
           </div>
-         
-
+          
+          
           <!-- Recommendation Purpose -->
-
-          <div class="input-box" style="width: 100%; clear: both;">
+          <br>
+          
+          <div class="input-box" >
             <span class="details">Recommendation Purpose </span>
-            <textarea name="recommendation_purpose" rows="10"  style="width: 100%; border: 1px solid #ccc; padding: 10px;"></textarea>
+            <textarea name="recommendation_purpose" rows="5"></textarea>
           </div>
-
- 
-             
+          
+          
+          
+          
 
 
 

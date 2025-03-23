@@ -25,20 +25,15 @@
   <span class="details">University Deadline: {{university.uni_deadline}}</span> <br />
   <span class="details">Program Applied: {{university.program_applied}}</span> <br />
   <span class="details">LinkedIn Profile: {{linkedin}}</span> <br />
-
+<br>
   <span class="details">Extra curricular activities: {{quality.extracirricular}}</span> <br />
-  <br>
+<br>
+  <span class="details">Personal Statement: {{ personal_statement|linebreaksbr }}</span> <br />
+<br>
+  <span class="details">Recommendation Purpose: {{ recommendation_purpose|linebreaksbr }}</span> <br />
+  <br />
 
-  <div class="input-box">
-    <span class="details">Personal Statement:</span>
-    <textarea readonly rows="7" style="border: 1px solid #ccc; padding: 10px; width: 100%;">{{ personal_statement|linebreaksbr }}</textarea>
-  </div>
-  
-  <div class="input-box">
-    <span class="details">Recommendation Purpose:</span>
-    <textarea readonly rows="7" style="border: 1px solid #ccc; padding: 10px; width: 100%;">{{ recommendation_purpose|linebreaksbr }}</textarea>
-  </div>
-  
+
   <!-- <h5>Universities Applied</h5>
   {% for university in universities %}
   <span class="details">University: {{university.uni_name}}</span> <br />

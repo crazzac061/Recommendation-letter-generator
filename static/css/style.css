@@ -510,3 +510,34 @@ form .button input:hover {
     margin-right: 10px;
   }
 }
+
+/*for rolling text*/
+/* Container for the rolling text at the bottom */
+.rolling-text-container {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 40px;
+  overflow: hidden;
+  /* background-color: #333;  */
+  /* Optional: Add background color to the banner */
+}
+
+/* The actual text that will move */
+.rolling-text {
+  display: inline-block;
+  color: #c36cbb; /* Optional: Change text color */
+  padding: 10px 0;
+  font-size: 18px; /* Optional: Adjust font size */
+  animation: scroll-left 30s linear infinite;
+}
+
+/* Keyframes for scrolling the text horizontally */
+@keyframes scroll-left {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
