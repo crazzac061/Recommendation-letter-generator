@@ -38,6 +38,10 @@ from django.core.mail import mail_admins
 from random import randint
 from pdf2docx import Converter
 # Create your views here.
+#import os
+#os.environ["SSL_CERT_FILE"] = r"C:\\Users\\lovel\\Desktop\\Recommendation-Letter-Generator\\venv\\Lib\\site-packages\\certifi\\cacert.pem"
+
+
 
 
 def index(request):
@@ -514,6 +518,10 @@ def make_letter(request):
         appli = Application.objects.get(name=stu.username, professor__unique_id=teacher_id)
         paper = Paper.objects.get(application=appli)
         project = Project.objects.get(application = appli)
+        
+        linkedin = appli.linkedIn
+        personal_statement = appli.personal_statement
+        recommendation_purpose = appli.recommendation_purpose
 
         university = University.objects.get(application=appli)
         quality = Qualities.objects.get(application=appli)
@@ -541,6 +549,10 @@ def make_letter(request):
                 "teacher_model": teacher_model,
                 "files": files, 
                 'templates': templates,
+                'linkedin': linkedin,  
+                'personal_statement': personal_statement, 
+                'recommendation_purpose': recommendation_purpose              
+                
             },
         )
 
@@ -560,6 +572,11 @@ def studentform1(request):
         has_paper = request.POST.get("has_paper")
         title_paper = request.POST.get("paper_title")
         paperlink = request.POST.get("paper_link")
+        
+        linkedIn_link = request.POST.get("linkedIn")
+        pstatement = request.POST.get('personal_statement')
+        rpurpose = request.POST.get('recommendation_purpose')
+        
 
         
         deployed = request.POST.get('deploy')
@@ -603,7 +620,10 @@ def studentform1(request):
                     info.years_taught=known_year 
                     info.subjects=listToStr 
                     info.is_paper = has_paper 
-                    info.intern = True if intern == "on" else False 
+                    info.intern = True if intern == "on" else False
+                    info.personal_statement = pstatement 
+                    info.recommendation_purpose = rpurpose
+                    info.linkedIn = linkedIn_link
                     info.save() 
                     
                 else:
@@ -676,6 +696,10 @@ def studentform1(request):
     return render(request, "loginStudent.html")
 
 def studentform2(request):
+    # Define max file size in bytes
+    MAX_CV_SIZE = 5 * 1024 * 1024  # 10MB
+    MAX_TRANSCRIPT_SIZE = 5 * 1024 * 1024  # 10MB
+    MAX_PHOTO_SIZE = 3 * 1024 * 1024  # 3MB
 
     # if request.method == "POST":
     #     uroll = request.POST.get("roll")
@@ -772,6 +796,16 @@ def studentform2(request):
         # social = request.POST.get('quality3')
         # teamwork = request.POST.get('quality4')
         # friendly = request.POST.get('quality5')
+        
+        # File size validation
+        if file_transcript and file_transcript.size > MAX_TRANSCRIPT_SIZE:
+            return render(request, "studentform.html", {"error": "Transcript file size exceeds the limit of 5MB."})
+        
+        if file_cv and file_cv.size > MAX_CV_SIZE:
+            return render(request, "studentform.html", {"error": "CV file size exceeds the limit of 5MB."})
+        
+        if file_photo and file_photo.size > MAX_PHOTO_SIZE:
+            return render(request, "studentform.html", {"error": "Photo file size exceeds the limit of 3MB."})
 
 
 

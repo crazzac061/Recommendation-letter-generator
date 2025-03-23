@@ -74,6 +74,13 @@ class Application(models.Model):
     subjects= models.CharField(max_length=500, null=True, blank=True)
     is_paper = models.CharField(max_length=500, null=True, blank=True)
     intern = models.BooleanField(default=False)
+    
+    #added here some more
+    personal_statement = models.CharField(max_length=500,null=True,blank=True)
+    recommendation_purpose = models.CharField(max_length=500,null=True,blank=True)
+    linkedIn = models.CharField(max_length=200,null=True,blank=True)
+    
+
 
 
     def __str__(self):
@@ -138,6 +145,11 @@ class Qualities(models.Model):
         return str(self.application) + " Qualities"
     class Meta:
         db_table = 'Qualities'
+        
+        
+
+
+
 
 
 class Academics(models.Model):
