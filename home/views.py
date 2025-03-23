@@ -38,6 +38,10 @@ from django.core.mail import mail_admins
 from random import randint
 from pdf2docx import Converter
 # Create your views here.
+#import os
+#os.environ["SSL_CERT_FILE"] = r"C:\\Users\\lovel\\Desktop\\Recommendation-Letter-Generator\\venv\\Lib\\site-packages\\certifi\\cacert.pem"
+
+
 
 
 def index(request):
@@ -514,6 +518,10 @@ def make_letter(request):
         appli = Application.objects.get(name=stu.username, professor__unique_id=teacher_id)
         paper = Paper.objects.get(application=appli)
         project = Project.objects.get(application = appli)
+        
+        linkedin = appli.linkedIn
+        personal_statement = appli.personal_statement
+        recommendation_purpose = appli.recommendation_purpose
 
         university = University.objects.get(application=appli)
         quality = Qualities.objects.get(application=appli)
@@ -541,6 +549,10 @@ def make_letter(request):
                 "teacher_model": teacher_model,
                 "files": files, 
                 'templates': templates,
+                'linkedin': linkedin,  
+                'personal_statement': personal_statement, 
+                'recommendation_purpose': recommendation_purpose              
+                
             },
         )
 
@@ -560,6 +572,11 @@ def studentform1(request):
         has_paper = request.POST.get("has_paper")
         title_paper = request.POST.get("paper_title")
         paperlink = request.POST.get("paper_link")
+        
+        linkedIn_link = request.POST.get("linkedIn")
+        pstatement = request.POST.get('personal_statement')
+        rpurpose = request.POST.get('recommendation_purpose')
+        
 
         
         deployed = request.POST.get('deploy')
@@ -603,7 +620,10 @@ def studentform1(request):
                     info.years_taught=known_year 
                     info.subjects=listToStr 
                     info.is_paper = has_paper 
-                    info.intern = True if intern == "on" else False 
+                    info.intern = True if intern == "on" else False
+                    info.personal_statement = pstatement 
+                    info.recommendation_purpose = rpurpose
+                    info.linkedIn = linkedIn_link
                     info.save() 
                     
                 else:
@@ -835,7 +855,7 @@ def studentform2(request):
             
         qualities_info.save()
 
-        send_mail('Application for recommendation letter', f'Dear sir,\n {naam} has send application in Recommendation Letter Generator. Nearest Deadline is {uni_deadline}. Please log in to generate the letter.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/  \n\nBest Regards,\nIoe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [info.professor.email], fail_silently=False)
+        send_mail('Application for recommendation letter', f'Dear sir,\n {naam} has send application in Recommendation Letter Generator. Nearest Deadline is {uni_deadline}. Please log in to generate the letter.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/  \n\nBest Regards,\nIoe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [info.professor.email], fail_silently=True)
 
 
     return render(request, "student_success.html",{'roll':uroll, 'letter' : False, 'naam' : naam})
