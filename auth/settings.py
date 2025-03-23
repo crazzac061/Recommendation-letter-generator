@@ -26,8 +26,11 @@ SECRET_KEY = 'django-insecure-1c(@@0$o-xebj!h&9#lp=70m_9)=axidw!o^%e1w^k*1x7xcwi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = ['*', 'recommendation-generator.bct.itclub.pp.ua']
+CSRF_TRUSTED_ORIGINS = [
+    'https://recommendation-generator.bct.itclub.pp.ua',
+    'http://recommendation-generator.bct.itclub.pp.ua',  # Include http as well if necessary
+]
 #admin
 ADMINS = [('admin', 'recoioe@gmail.com')]
 
@@ -82,6 +85,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'auth.wsgi.application'
+
 
 
 # Database
