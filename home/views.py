@@ -1959,3 +1959,33 @@ def adminDashboard(request):
         'subjects': subjects,
         'professors': reversed_teacher_usernames
     })
+from .forms import TeacherInfoForm
+from django.contrib.auth.models import User
+
+def registerProfessor(request):
+    if request.method == 'POST':
+        form = TeacherInfoForm(request.POST, request.FILES)
+        if form.is_valid():
+            teacher_info = form.save(commit=False)
+            # Generate unique_id
+            unique_id = str(random.randint(10000, 99999))
+            while TeacherInfo.objects.filter(unique_id=unique_id).exists():
+                unique_id = str(random.randint(10000, 99999))
+            teacher_info.unique_id = unique_id
+            teacher_info.save()
+            form.save_m2m()
+            # Create corresponding User
+            uname = teacher_info.name.lower().replace('dr. ', '').replace(' ', '') + "_" + unique_id
+            user = User.objects.create_user(
+                username=uname,
+                password=form.cleaned_data['password'],
+                first_name=teacher_info.name,
+                last_name='/' + unique_id,
+                email=teacher_info.email
+            )
+            user.save()
+            messages.success(request, 'Professor registered successfully! You can now log in.')
+            return redirect('loginTeacher')
+    else:
+        form = TeacherInfoForm()
+    return render(request, 'registerProfessor.html', {'form': form})

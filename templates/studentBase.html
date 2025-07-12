@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+   {% load static %}
    <title>{% block title %}{% endblock title %} | Letter</title>
    <meta charset="UTF-8" />
    <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,11 +14,11 @@
 
    <link href="https://fonts.googleapis.com/css?family=Poppins:400,500&display=swap" rel="stylesheet" />
    <!--===============================================================================================-->
-   <link rel="icon" type="image/png" href="static/images/tu.png" />
+   <link rel="icon" type="image/png" href="{% static 'images/tu.png' %}" />
 
    <!--===============================================================================================-->
-   <link rel="stylesheet" type="text/css" href="../static/css/main.css" />
-   <link rel="stylesheet" href="../static/css/style.css" />
+   <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+   <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}" />
    {% comment %} <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet"> {% endcomment %}
   <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
 
@@ -39,7 +40,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-transparent">
     <div class="container-fluid">
       <a class="navbar-brand" href="/">
-        <img src="../static/images/tu.png" width="35" height="35" class="d-inline-block align-top" alt="">
+        <img src="{% static 'images/tu.png' %}" width="35" height="35" class="d-inline-block align-top" alt="">
         IOE | Pulchowk Campus
         <br>
         <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Recommendation Letter Generator</p>
@@ -65,9 +66,9 @@
 
 {% endblock body %}
 
-   <img class="big-circle" src="../static/images/img/big-eclipse.svg" alt="" />
-   <img class="medium-circle" src="../static/images/img/mid-eclipse.svg" alt="" />
-   <img class="small-circle" src="../static/images/img/small-eclipse.svg" alt="" />
+   <img class="big-circle" src="{% static 'images/img/big-eclipse.svg' %}" alt="" />
+   <img class="medium-circle" src="{% static 'images/img/mid-eclipse.svg' %}" alt="" />
+   <img class="small-circle" src="{% static 'images/img/small-eclipse.svg' %}" alt="" />
 </body>
 
 </html>

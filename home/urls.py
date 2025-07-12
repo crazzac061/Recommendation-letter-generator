@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path ,include
 from home import views
+from .views import registerProfessor
 urlpatterns = [
     path('', views.index, name='home'),
     path('loginStudent', views.loginStudent, name='loginStudent'),
@@ -48,6 +49,10 @@ urlpatterns = [
     path('getTemplate', views.getTemplate, name='getTemplate'),
     path('loginAdmin', views.admin_login, name='admin_login'),
     path('adminDashboard', views.adminDashboard, name='adminDashboard'),
+    
+    ##Added by 79 batch
+    path('registerProfessor/', registerProfessor, name='registerProfessor'),
+
 
 
 
