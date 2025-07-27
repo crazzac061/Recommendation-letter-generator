@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path ,include
 from home import views
 from .views import registerProfessor
+from .views import download_letter
 urlpatterns = [
     path('', views.index, name='home'),
     path('loginStudent', views.loginStudent, name='loginStudent'),
@@ -42,6 +43,7 @@ urlpatterns = [
     path('addSubjects', views.addSubjects, name='addSubjects'),
     path('deleteSubjects', views.deleteSubjects, name='deleteSubjects'),
     path('teacher', views.teacher, name='teacher'),
+    path('download_letter/', download_letter, name='download_letter'),
 
     ## Added by 78 batch
     path('renderCustom', views.renderCustom, name='renderCustom'),

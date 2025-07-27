@@ -8,8 +8,10 @@ class StudentForm(forms.ModelForm):
     dob = forms.DateField(help_text="Date of Birth")
     gender = forms.CharField(max_length=10, help_text="Gender")
 
+
     class Meta:
         model = StudentLoginInfo
+        fields = ['username', 'roll_number', 'dob', 'department', 'program', 'gender', 'password', 'photo']
         exclude = ('department','program',)
 
 ## 78 batch

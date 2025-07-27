@@ -2,38 +2,51 @@
 
 {% block title %}Edit Letter{% endblock title %}
 {% block body %}
-<div class="container">
-   <center> <h2>Letter of Recommendation</h2> </center>
-
-    
-
-    <div id='whole_file'>
-        <form method="POST" , action="/final">
-            <div contenteditable="true" name="textbox" id="textbox">
-                {{letter | safe}}
-                
-            </div>
-
-  
-
-    
-
-
-    <input name="roll" value="{{student.std.roll_number}}" type="hidden">
-    <!-- <textarea name="textarea" id="textarea" hidden="true"></textarea>  -->
-
-    <textarea name="textarea1" id="textarea1" hidden="true"></textarea>
-    <textarea name="textarea2" id="textarea2" hidden="true"></textarea>
-    <textarea name="textarea3" id="textarea3" hidden="true"></textarea>
-
-
-
-    <div class="button">
-        <input type="submit" id="btn" value="Submit" onclick="Exchangevalue()">
+<div class="a4-preview">
+    <div class="a4-paper">
+        <h2 style="text-align:center;">Letter of Recommendation</h2>
+        <div style="white-space: pre-line; font-size: 16px;">
+            {{ letter|safe }}
+        </div>
     </div>
-    </form>
-  </div>
 </div>
+<div style="text-align:center; margin-top:30px; display: flex; justify-content: center; gap: 20px;">
+    <form method="post" action="/download_letter/" style="display:inline;">
+        {% csrf_token %}
+        <input type="hidden" name="roll" value="{{student.std.roll_number}}">
+        <input type="hidden" name="format" value="pdf">
+        <button type="submit" class="cta-add">Download as PDF</button>
+    </form>
+    <form method="post" action="/download_letter/" style="display:inline;">
+        {% csrf_token %}
+        <input type="hidden" name="roll" value="{{student.std.roll_number}}">
+        <input type="hidden" name="format" value="docx">
+        <button type="submit" class="cta-add">Download as DOCX</button>
+    </form>
+</div>
+<style>
+.a4-preview {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    background: #f0f0f0;
+    padding: 40px 0 60px 0; /* Extra bottom padding for buttons */
+}
+.a4-paper {
+    width: 794px;
+    height: 1123px; /* Fixed height for A4 */
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    padding: 48px 60px;
+    margin: 0 auto;
+    border-radius: 4px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+</style>
 <script>
     // var textbox= document.getElementById("textbox");
     // var textbox1= document.getElementById("1");

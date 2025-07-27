@@ -29,6 +29,7 @@ class StudentLoginInfo(models.Model):
     password = models.CharField(max_length=100, null=True,blank=False)
     dob = models.DateField()
     gender = models.CharField(max_length=10 , default="null",null=True,blank=True)
+    photo =models.ImageField(upload_to='student_photos/', blank=True, null=True)
 
     def __str__(self):
         return str(self.username)
@@ -178,6 +179,7 @@ class CustomTemplates(models.Model):
     template_name = models.CharField(max_length=100,null=True,blank=True)
     template = models.TextField(null=True,blank=True)
     professor = models.ForeignKey(TeacherInfo, on_delete= CASCADE)
+    is_default = models.BooleanField(default=False)  # New field
 
     def __str__(self):
         return str(self.professor) + " Template"

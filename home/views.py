@@ -335,6 +335,7 @@ def registerStudent(request):
         prog = request.POST.get("program")
         department = Department.objects.get(dept_name=depart)
         program = Program.objects.get(program_name=prog)
+        
         if Pass != confirmPass:
             messages.error(request, "Passwords donot match")
             return render(request, "registerStudent.html", context=context_dict )
@@ -944,10 +945,15 @@ def loginTeacher(request):
         email = request.POST.get("username")   
         passwo = request.POST.get("password")
         # check if user is real
-        if User.objects.filter(email__exact=email).exists():
-            print('User object with that email exist')
-            tempUser = User.objects.get(email__exact=email)
-
+        tempUsers = User.objects.filter(email__exact=email)
+        if tempUsers.count() > 1:
+            messages.error(request, "Multiple accounts found with this email. Please contact admin.")
+            return render(request, "loginTeacher.html")
+        elif not tempUsers.exists():
+            messages.error(request, "You are not registered as a professor.")
+            return render(request, "loginTeacher.html")
+        else:
+            tempUser = tempUsers.first()
             usern = tempUser.username
             user = authenticate(username=usern, password=passwo)
             if user is not None:
@@ -957,16 +963,11 @@ def loginTeacher(request):
                 x = full_name.split("/")
                 unique = x[-1]
                 print(x)
-                
                 print(f'Unique id {unique}')
-                # name = x[0]
-
                 teacher_model = TeacherInfo.objects.get(unique_id=unique)
                 generated_dataharu = Application.objects.filter(professor__unique_id=unique , is_generated=True)
-
                 dataharu = Application.objects.filter(professor__unique_id=unique)
                 number = len(dataharu)
-                # to check if there is request or not on teachers page
                 for data in dataharu:
                     if data.is_generated:
                         value += 1
@@ -975,14 +976,12 @@ def loginTeacher(request):
                     check_value = True
                 else:
                     check_value = False
-                    # to convert database to json objects
                 std_dataharu = serializers.serialize(
                     "json", Application.objects.filter(professor__unique_id=unique,is_generated=True)
                 )
                 non_generated = Application.objects.filter(
                     is_generated=False, professor__unique_id=unique
                 )
-
                 response = render(
                     request,
                     "Teacher.html",
@@ -997,17 +996,10 @@ def loginTeacher(request):
                 )
                 response.set_cookie("unique", unique)
                 response.set_cookie("username", user.username)
-                
                 return response
-            # A backend authenticated the credentials
             else:
-                # No backend authenticated the credentials
                 messages.error(request, "Sorry!  The Password doesnot match.")
                 return render(request, "loginTeacher.html")
-        else:
-
-            messages.error(request, "You are not registered as a professor.")
-            return render(request, "loginTeacher.html")
     
 
 
@@ -1676,52 +1668,28 @@ def teacher(request):
 
 def renderCustom(request):
     if request.method == "POST":
-
+        from jinja2 import Template
         unique = request.COOKIES.get("unique")
-
         roll = request.POST.get("roll")
-
-        presentation= request.POST.get('presentation')
+        presentation = request.POST.get('presentation')
         quality = request.POST.get('qual')
-
         leaders = request.POST.get('quality1')
         hardwork = request.POST.get('quality2')
         social = request.POST.get('quality3')
         teamwork = request.POST.get('quality4')
         friendly = request.POST.get('quality5')
-
         recommend = request.POST.get('recommend')
         template_name = request.POST.get('temp')
-
         info = Application.objects.get(professor__unique_id=unique , std__roll_number=roll)
-
-
-        # qualities_info = Qualities(
-        #     leadership = True if leaders == "on" else False,
-        #     hardworking = True if hardwork == "on" else False,
-        #     social = True if social == "on" else False,
-        #     teamwork = True if teamwork == "on" else False,
-        #     friendly =True if friendly == "on" else False,
-        #     quality = quality,
-        #     presentation = presentation,
-        #     recommend = recommend,
-        #     #extracirricular = extra,
-        #     student = stu_info,
-        # )
-        # qualities_info.save(update_fields=["leadership", "hardworking", 
-        # "social", "teamwork", "friendly", "quality", "presentation", "recommend" , "student"])
-
-        Qualities.objects.filter(application = info).update(leadership = True if leaders == "on" else False,
-                                                            hardworking = True if hardwork == "on" else False,
-                                                            social = True if social == "on" else False,
-                                                            teamwork = True if teamwork == "on" else False,
-                                                            friendly =True if friendly == "on" else False,
-                                                            quality = quality,
-                                                            presentation = presentation,
-                                                            recommend = recommend,)
-
-
-        #student = StudentData.objects.get(std__roll_number = roll)
+        Qualities.objects.filter(application = info).update(
+            leadership = True if leaders == "on" else False,
+            hardworking = True if hardwork == "on" else False,
+            social = True if social == "on" else False,
+            teamwork = True if teamwork == "on" else False,
+            friendly =True if friendly == "on" else False,
+            quality = quality,
+            presentation = presentation,
+            recommend = recommend,)
         stu = StudentLoginInfo.objects.get(roll_number=roll)
         application = Application.objects.get(name=stu.username , professor__unique_id=unique)
         paper = Paper.objects.get(application = application )
@@ -1729,88 +1697,47 @@ def renderCustom(request):
         university = University.objects.get(application = application)
         quality = Qualities.objects.get(application = application)
         academics = Academics.objects.get(application = application)
-        teacher_name = application.professor.name
+        teacher_model = application.professor
+        teacher_name = teacher_model.name
         files = Files.objects.get(application = application)
-
-        bisaya=application.subjects
-        
-        subjec=bisaya.split(',')
-        subjects=subjec[:-1]
-        subject=subjec[-1]
-
-        #student firstname
+        bisaya = application.subjects
+        subjec = bisaya.split(',')
+        subjects = subjec[:-1]
+        subject = subjec[-1]
         name = application.name
         fname = name.split(' ')
         firstname = fname[0]
-        
-
-        length=len(subjec)
-        if length==1:
-            value=True
+        length = len(subjec)
+        value = True if length == 1 else False
+        # Template selection logic
+        template_obj = None
+        if template_name and template_name != 'default':
+            template_obj = CustomTemplates.objects.filter(template_name=template_name, professor=teacher_model).first()
+        if not template_obj:
+            # Try to get a "Default" template for this professor
+            template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
+        if not template_obj:
+            # Fallback to a hardcoded default template
+            default_template_content = """
+To Whom It May Concern,\n\nI am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.\n\n{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.\n\n{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class.{% endif %}\n\n{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled \"{{ project.supervised_project }}\".{% endif %}\n\n{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper \"{{ paper.paper_title }}\".{% endif %}\n\n{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}\n\n{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}\n\n{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}\n\nIf you require any further information, please feel free to contact me at {{ teacher.email }}.\n\nSincerely,\n{{ teacher.name }}\n{{ teacher.title }}\nIOE Pulchowk Campus\n"""
+            jinja_template = Template(default_template_content)
         else:
-            value=False
-
-        if template_name == 'default':
-            print('sending test.html file')
-            return render(request, 
-                        "test.html", 
-                        {
-                            "student": application,
-                            'subjects':subjects,
-                            'subject':subject,
-                            'value':value , 
-                            'firstname':firstname,
-                            "paper": paper,
-                            "project": project,
-                            "university": university,
-                            "quality": quality,
-                            "academics": academics,
-                            "teacher": teacher_name,
-                            "files": files, 
-                        }
-                    )
-
-        from jinja2 import Template
-
-
-        template = get_object_or_404(CustomTemplates, template_name = template_name)
-
-        jinja_template = Template(template.template)
-
+            jinja_template = Template(template_obj.template)
         rendered_letter = jinja_template.render({
-                            "student": application,
-                            'subjects':subjects,
-                            'subject':subject,
-                            'value':value , 
-                            'firstname':firstname,
-                            "paper": paper,
-                            "project": project,
-                            "university": university,
-                            "quality": quality,
-                            "academics": academics,
-                            "teacher": teacher_name,
-                            "files": files, 
-                        })
-        
-        return render(request, 'test2.html' , {'letter':rendered_letter , 'student':application})
-
-        # return render(request, 
-        #                 "test.html", 
-        #                 {
-        #                     "student": student,
-        #                     'subjects':subjects,
-        #                     'subject':subject,
-        #                     'value':value , 
-        #                     'firstname':firstname,
-        #                     "paper": paper,
-        #                     "project": project,
-        #                     "university": university,
-        #                     "quality": quality,
-        #                     "academics": academics,
-        #                     "teacher": teacher_name,
-        #                     "files": files, 
-        #                 }
-        #             )
+            "student": application,
+            'subjects': subjects,
+            'subject': subject,
+            'value': value,
+            'firstname': firstname,
+            "paper": paper,
+            "project": project,
+            "university": university,
+            "quality": quality,
+            "academics": academics,
+            "teacher": teacher_model,
+            "files": files,
+        })
+        return render(request, 'test2.html', {'letter': rendered_letter, 'student': application})
 
 
 def template(request):
@@ -1961,6 +1888,83 @@ def adminDashboard(request):
     })
 from .forms import TeacherInfoForm
 from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+from docx import Document
+from jinja2 import Template
+import datetime
+from fpdf import FPDF
+
+@csrf_exempt
+def download_letter(request):
+    if request.method == 'POST':
+        roll = request.POST.get('roll')
+        file_format = request.POST.get('format')
+        unique = request.COOKIES.get('unique')
+        # Fetch all context data as in renderCustom
+        application = Application.objects.get(std__roll_number=roll, professor__unique_id=unique)
+        paper = Paper.objects.get(application=application)
+        project = Project.objects.get(application=application)
+        university = University.objects.get(application=application)
+        quality = Qualities.objects.get(application=application)
+        academics = Academics.objects.get(application=application)
+        teacher_model = application.professor
+        files = Files.objects.get(application=application)
+        bisaya = application.subjects
+        subjec = bisaya.split(',')
+        subjects = subjec[:-1]
+        subject = subjec[-1]
+        name = application.name
+        fname = name.split(' ')
+        firstname = fname[0]
+        length = len(subjec)
+        value = True if length == 1 else False
+        # Template selection logic (reuse from renderCustom)
+        template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
+        if not template_obj:
+            default_template_content = """
+To Whom It May Concern,\n\nI am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.\n\n{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.\n\n{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class.{% endif %}\n\n{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled \"{{ project.supervised_project }}\".{% endif %}\n\n{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper \"{{ paper.paper_title }}\".{% endif %}\n\n{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}\n\n{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}\n\n{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}\n\nIf you require any further information, please feel free to contact me at {{ teacher.email }}.\n\nSincerely,\n{{ teacher.name }}\n{{ teacher.title }}\nIOE Pulchowk Campus\n"""
+            jinja_template = Template(default_template_content)
+        else:
+            jinja_template = Template(template_obj.template)
+        context = {
+            "student": application,
+            'subjects': subjects,
+            'subject': subject,
+            'value': value,
+            'firstname': firstname,
+            "paper": paper,
+            "project": project,
+            "university": university,
+            "quality": quality,
+            "academics": academics,
+            "teacher": teacher_model,
+            "files": files,
+            "today": datetime.date.today().strftime("%B %d, %Y"),
+        }
+        rendered_letter = jinja_template.render(context)
+        if file_format == 'docx':
+            doc = Document()
+            for paragraph in rendered_letter.split('\n\n'):
+                doc.add_paragraph(paragraph)
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            response['Content-Disposition'] = f'attachment; filename=Recommendation_{application.name}.docx'
+            doc.save(response)
+            return response
+        elif file_format == 'pdf':
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            for paragraph in rendered_letter.split('\n\n'):
+                for line in paragraph.split('\n'):
+                    pdf.multi_cell(0, 10, line)
+                pdf.ln(5)
+            pdf_bytes = pdf.output(dest='S').encode('latin1')
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename=Recommendation_{application.name}.pdf'
+            return response
+        else:
+            return HttpResponse("Invalid format", status=400)
 
 def registerProfessor(request):
     if request.method == 'POST':
@@ -1989,3 +1993,16 @@ def registerProfessor(request):
     else:
         form = TeacherInfoForm()
     return render(request, 'registerProfessor.html', {'form': form})
+
+def add_default_template_to_all_professors():
+    from home.models import TeacherInfo, CustomTemplates
+    default_template_content = """
+To Whom It May Concern,\n\nI am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.\n\n{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.\n\n{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class.{% endif %}\n\n{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled \"{{ project.supervised_project }}\".{% endif %}\n\n{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper \"{{ paper.paper_title }}\".{% endif %}\n\n{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}\n\n{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}\n\n{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}\n\nIf you require any further information, please feel free to contact me at {{ teacher.email }}.\n\nSincerely,\n{{ teacher.name }}\n{{ teacher.title }}\nIOE Pulchowk Campus\n"""
+    for prof in TeacherInfo.objects.all():
+        if not CustomTemplates.objects.filter(professor=prof, template_name__iexact='Default').exists():
+            CustomTemplates.objects.create(
+                template_name="Default",
+                template=default_template_content,
+                professor=prof,
+                is_default=True
+            )
