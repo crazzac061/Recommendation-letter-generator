@@ -30,16 +30,29 @@
 
           <div class="input-box">
             <span class="details">Tentative Ranking *</span>
-            <select name="tentative_ranking" required>
-              <option></option>
-              <option>Batch Topper</option>
-              <option>Top 5%</option>
-              <option>Top 10%</option>
-              <option>Top 20%</option>
-              <option>Top 30%</option>
-              <option>Top 40%</option>
-            </select>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <select name="tentative_ranking" id="rankSelect" required>
+                <option></option>
+                <option>Batch Topper</option>
+                <option>Top 5%</option>
+                <option>Top 10%</option>
+                <option>Top 20%</option>
+                <option>Top 30%</option>
+                <option>Top 40%</option>
+              </select>
+
+              <input type="text" name="tentative_ranking" id="rankCustomInput" placeholder="Enter custom ranking" style="display: none;" />
+
+              <button type="button" onclick="toggleRankInput()" title="Enter custom value"
+                style="background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center;">
+                <!-- Simple black pencil SVG -->
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="black" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12.146 0.146a.5.5 0 01.708 0l3 3a.5.5 0 010 .708l-9.5 9.5a.5.5 0 01-.168.11l-5 2a.5.5 0 01-.65-.65l2-5a.5.5 0 01.11-.168l9.5-9.5zM11.207 3L13 4.793 14.293 3.5 12.5 1.707 11.207 3zm1.586 2L11 3.207 4 10.207V11h.793l7-7zM3.5 11.5l-.5 1.293L4.207 12l-1.293-.5z"/>
+                </svg>
+              </button>
+            </div>
           </div>
+
 
           <div class="input-box">
               <span class="details">Transcript *</span>
@@ -196,6 +209,27 @@
 
         // If all files are within size limits, allow form submission
     });
+
+    function toggleRankInput() {
+    const select = document.getElementById('rankSelect');
+    const input = document.getElementById('rankCustomInput');
+
+    const usingCustom = input.style.display === 'inline-block';
+
+    if (usingCustom) {
+      input.style.display = 'none';
+      input.value = '';
+      select.style.display = 'inline-block';
+      select.required = true;
+      input.required = false;
+    } else {
+      select.style.display = 'none';
+      select.value = '';
+      input.style.display = 'inline-block';
+      input.required = true;
+      select.required = false;
+    }
+  }
 </script>
 
 

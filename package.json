@@ -1,0 +1,8 @@
+{
+  "name": "reco_letter",
+  "version": "1.0.0",
+  "description": "Frontend dependencies for reco letter generator",
+  "dependencies": {
+    "bootstrap-icons": "1.5.0"
+  }
+}
