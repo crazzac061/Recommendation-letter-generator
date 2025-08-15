@@ -1724,7 +1724,8 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
         else:
             jinja_template = Template(template_obj.template)
         rendered_letter = jinja_template.render({
-            "student": application,
+            "application":application,
+            "student": stu,
             'subjects': subjects,
             'subject': subject,
             'value': value,
