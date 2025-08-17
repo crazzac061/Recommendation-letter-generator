@@ -1898,13 +1898,18 @@ from jinja2 import Template
 import datetime
 from fpdf import FPDF
 
+from django.http import HttpResponse
+from weasyprint import HTML
+import datetime
+
 @csrf_exempt
 def download_letter(request):
     if request.method == 'POST':
         roll = request.POST.get('roll')
         file_format = request.POST.get('format')
         unique = request.COOKIES.get('unique')
-        # Fetch all context data as in renderCustom
+
+        # Fetch your objects (Application, Paper, Project, etc.)
         application = Application.objects.get(std__roll_number=roll, professor__unique_id=unique)
         paper = Paper.objects.get(application=application)
         project = Project.objects.get(application=application)
@@ -1924,26 +1929,25 @@ def download_letter(request):
         value = True if length == 1 else False
         stu = StudentLoginInfo.objects.get(roll_number=roll)
 
-        # Template selection logic (reuse from renderCustom)
+        # Template selection
         template_name = request.POST.get('template_name', 'Default')
         template_obj = CustomTemplates.objects.filter(template_name=template_name, professor=teacher_model).first()
         if not template_obj:
             template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
-        if not template_obj:
-            default_template_content = """
-To Whom It May Concern,\n\nI am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.\n\n{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.\n\n{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class.{% endif %}\n\n{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled \"{{ project.supervised_project }}\".{% endif %}\n\n{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper \"{{ paper.paper_title }}\".{% endif %}\n\n{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}\n\n{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}\n\n{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}\n\nIf you require any further information, please feel free to contact me at {{ teacher.email }}.\n\nSincerely,\n{{ teacher.name }}\n{{ teacher.title }}\nIOE Pulchowk Campus\n"""
-            jinja_template = Template(default_template_content)
-        else:
-            jinja_template = Template(template_obj.template)
 
-        print("TEMPLATE NAME FROM DOWNLOAD",template_name)
+        default_template_content = """
+        <p>To Whom It May Concern,</p>
+        <p>I am delighted to write this letter of recommendation for {{ student.name }} ...</p>
+        """
+        jinja_template = Template(template_obj.template if template_obj else default_template_content)
+
         context = {
             "student": stu,
             "application": application,
-            'subjects': subjects,
-            'subject': subject,
-            'value': value,
-            'firstname': firstname,
+            "subjects": subjects,
+            "subject": subject,
+            "value": value,
+            "firstname": firstname,
             "paper": paper,
             "project": project,
             "university": university,
@@ -1953,56 +1957,68 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
             "files": files,
             "today": datetime.date.today().strftime("%B %d, %Y"),
         }
+
         rendered_letter = jinja_template.render(context)
-        # If the template is custom (i.e., contains HTML tags), convert to plain text for DOCX
+
         from bs4 import BeautifulSoup
-        is_custom = template_obj and template_obj.template != None and ('<' in template_obj.template and '>' in template_obj.template)
+
+        def html_to_docx_paragraphs(rendered_html):
+            """
+            Convert rendered HTML into a list of paragraphs suitable for python-docx.
+            Preserves line breaks (<br>) and spacing/indentation at the start of lines.
+            """
+            soup = BeautifulSoup(rendered_html, 'html.parser')
+            paragraphs = []
+
+            # Iterate over <p> tags
+            for p in soup.find_all('p'):
+                lines = []
+                for elem in p.descendants:
+                    if elem.name == 'br':
+                        lines.append('\n')
+                    elif isinstance(elem, str):
+                        lines.append(elem)
+                text = ''.join(lines)
+                # Split by line breaks inside <p> and preserve indentation
+                for line in text.split('\n'):
+                    if line.strip():  # Skip empty lines
+                        paragraphs.append(line)
+
+            # Fallback: if no <p> tags, treat all text as one block split by double newlines
+            if not paragraphs:
+                text = soup.get_text("\n")
+                paragraphs = [t.strip() for t in text.split('\n\n') if t.strip()]
+
+            return paragraphs
+
+
+
         if file_format == 'docx':
+            from docx import Document
             doc = Document()
-            if is_custom:
-                # Convert HTML to plain text, preserving paragraph and line breaks as in preview
-                soup = BeautifulSoup(rendered_letter, 'html.parser')
-                # We'll build a list of lines, preserving <p> as paragraphs and <br> as line breaks
-                paragraphs = []
-                for elem in soup.recursiveChildGenerator():
-                    if elem.name == 'p':
-                        # Start a new paragraph
-                        text = ''
-                        for subelem in elem.descendants:
-                            if subelem.name == 'br':
-                                text += '\n'
-                            elif isinstance(subelem, str):
-                                text += subelem
-                        # Remove leading/trailing whitespace but preserve internal spacing
-                        paragraphs.append(text.strip())
-                # If no <p> tags, fallback to all text
-                if not paragraphs:
-                    text = soup.get_text("\n")
-                    paragraphs = [t.strip() for t in text.split('\n\n') if t.strip()]
-                for para in paragraphs:
-                    # Add each paragraph, preserving line breaks within
-                    doc.add_paragraph(para)
-            else:
-                for paragraph in rendered_letter.split('\n\n'):
-                    doc.add_paragraph(paragraph)
-            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            paragraphs = html_to_docx_paragraphs(rendered_letter)
+
+            for para in paragraphs:
+                doc.add_paragraph(para)
+
+            response = HttpResponse(
+                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
             response['Content-Disposition'] = f'attachment; filename=Recommendation_{application.name}.docx'
             doc.save(response)
             return response
+
+        # --- PDF export using WeasyPrint ---
         elif file_format == 'pdf':
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            for paragraph in rendered_letter.split('\n\n'):
-                for line in paragraph.split('\n'):
-                    pdf.multi_cell(0, 10, line)
-                pdf.ln(5)
-            pdf_bytes = pdf.output(dest='S').encode('latin1')
-            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            pdf_file = HTML(string=rendered_letter).write_pdf()
+            response = HttpResponse(pdf_file, content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename=Recommendation_{application.name}.pdf'
             return response
+
         else:
             return HttpResponse("Invalid format", status=400)
+
+
 
 def registerProfessor(request):
     if request.method == 'POST':
