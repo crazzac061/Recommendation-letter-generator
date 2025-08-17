@@ -1600,7 +1600,7 @@ def edit(request):
         return render(request, 
                         "test.html", 
                         {
-                            "student": application,
+                            # "student": application,
                             'subjects':subjects,
                             'subject':subject,
                             'value':value , 
@@ -1724,7 +1724,7 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
         else:
             jinja_template = Template(template_obj.template)
         rendered_letter = jinja_template.render({
-            "application":application,
+            'application':application,
             "student": stu,
             'subjects': subjects,
             'subject': subject,
@@ -1738,7 +1738,7 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
             "teacher": teacher_model,
             "files": files,
         })
-        return render(request, 'test2.html', {'letter': rendered_letter, 'student': application})
+        return render(request, 'test2.html', {'letter': rendered_letter, 'student': stu, 'template_name':template_name})
 
 
 def template(request):
@@ -1748,7 +1748,9 @@ def template(request):
         teacher = TeacherInfo.objects.get(unique_id=unique)
 
         return render(request, "customTemplate.html", {'professor':teacher})
-    
+
+
+
 def getTemplate(request):
     if request.method == "POST":
         content = request.POST.get("content")
@@ -1920,16 +1922,24 @@ def download_letter(request):
         firstname = fname[0]
         length = len(subjec)
         value = True if length == 1 else False
+        stu = StudentLoginInfo.objects.get(roll_number=roll)
+
         # Template selection logic (reuse from renderCustom)
-        template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
+        template_name = request.POST.get('template_name', 'Default')
+        template_obj = CustomTemplates.objects.filter(template_name=template_name, professor=teacher_model).first()
+        if not template_obj:
+            template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
         if not template_obj:
             default_template_content = """
 To Whom It May Concern,\n\nI am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.\n\n{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.\n\n{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class.{% endif %}\n\n{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled \"{{ project.supervised_project }}\".{% endif %}\n\n{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper \"{{ paper.paper_title }}\".{% endif %}\n\n{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}\n\n{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}\n\n{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}\n\nIf you require any further information, please feel free to contact me at {{ teacher.email }}.\n\nSincerely,\n{{ teacher.name }}\n{{ teacher.title }}\nIOE Pulchowk Campus\n"""
             jinja_template = Template(default_template_content)
         else:
             jinja_template = Template(template_obj.template)
+
+        print("TEMPLATE NAME FROM DOWNLOAD",template_name)
         context = {
-            "student": application,
+            "student": stu,
+            "application": application,
             'subjects': subjects,
             'subject': subject,
             'value': value,
@@ -1944,10 +1954,37 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
             "today": datetime.date.today().strftime("%B %d, %Y"),
         }
         rendered_letter = jinja_template.render(context)
+        # If the template is custom (i.e., contains HTML tags), convert to plain text for DOCX
+        from bs4 import BeautifulSoup
+        is_custom = template_obj and template_obj.template != None and ('<' in template_obj.template and '>' in template_obj.template)
         if file_format == 'docx':
             doc = Document()
-            for paragraph in rendered_letter.split('\n\n'):
-                doc.add_paragraph(paragraph)
+            if is_custom:
+                # Convert HTML to plain text, preserving paragraph and line breaks as in preview
+                soup = BeautifulSoup(rendered_letter, 'html.parser')
+                # We'll build a list of lines, preserving <p> as paragraphs and <br> as line breaks
+                paragraphs = []
+                for elem in soup.recursiveChildGenerator():
+                    if elem.name == 'p':
+                        # Start a new paragraph
+                        text = ''
+                        for subelem in elem.descendants:
+                            if subelem.name == 'br':
+                                text += '\n'
+                            elif isinstance(subelem, str):
+                                text += subelem
+                        # Remove leading/trailing whitespace but preserve internal spacing
+                        paragraphs.append(text.strip())
+                # If no <p> tags, fallback to all text
+                if not paragraphs:
+                    text = soup.get_text("\n")
+                    paragraphs = [t.strip() for t in text.split('\n\n') if t.strip()]
+                for para in paragraphs:
+                    # Add each paragraph, preserving line breaks within
+                    doc.add_paragraph(para)
+            else:
+                for paragraph in rendered_letter.split('\n\n'):
+                    doc.add_paragraph(paragraph)
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
             response['Content-Disposition'] = f'attachment; filename=Recommendation_{application.name}.docx'
             doc.save(response)
