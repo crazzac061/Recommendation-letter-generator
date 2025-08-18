@@ -153,7 +153,32 @@ def text_to_pdf(text,roll, name):
     margin_bottom_mm = 10
     character_width_mm = 7 * pt_to_mm
     width_text = (a4_width_mm / 1*character_width_mm)
+
+    import unicodedata
+
+    def normalize_text(text: str) -> str:
+        # Replace “fancy” punctuation with ASCII equivalents
+        replacements = {
+            "’": "'",
+            "‘": "'",
+            "“": '"',
+            "”": '"',
+            "–": "-",
+            "—": "-",
+            "•": "*",
+            "…": "...",
+            "©": "(c)",
+            "®": "(R)",
+            "™": "TM",
+        }
+        for bad, good in replacements.items():
+            text = text.replace(bad, good)
+
+    # Normalize to remove accents (é -> e, ü -> u, etc.)
+        return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
     
+    text = normalize_text(text)
+
     pdf = FPDF(orientation="P", unit="mm", format="Letter")
     pdf.set_auto_page_break(True, margin=margin_bottom_mm)
     pdf.add_page()
@@ -214,6 +239,7 @@ def final(request, *args, **kwargs):
         application = Application.objects.get(std__roll_number=roll, professor__unique_id=unique)
         
 
+        print("TEXT:\n",textarea1)
 
         # textarea2 = request.POST.get("textarea2")
         # textarea3 = request.POST.get("textarea3")
@@ -225,7 +251,7 @@ def final(request, *args, **kwargs):
         text_to_pdf(letter,roll, application.professor.name)
         application.is_generated = True
         application.save() 
-        messages.error(request, "Sorry!  The Credentials doesn't match.")
+        # messages.error(request, "Sorry!  The Credentials doesn't match.")
         send_mail('Recommendation Letter', 'Dear sir, \n Your letter has been generated your letter of recommendation. \n \n Best Regards, \n Ioe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [application.email], fail_silently=True)
         return redirect("media/letter/"+roll+"_"+ application.professor.name +".pdf")
 
@@ -1730,7 +1756,7 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
         
         rendered_letter = jinja_template.render({
             'application':application,
-            "student": stu,
+            "student": application.std,
             'subjects': subjects,
             'subject': subject,
             'value': value,
@@ -1743,7 +1769,7 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
             "teacher": teacher_model,
             "files": files,
         })
-        return render(request, 'test2.html', {'letter': rendered_letter, 'student': stu, 'template_name':template_name})
+        return render(request, 'test2.html', {'letter': rendered_letter, 'student': application.std, 'template_name':template_name})
 
 
 def template(request):
