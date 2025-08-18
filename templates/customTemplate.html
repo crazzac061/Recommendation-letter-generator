@@ -143,17 +143,27 @@ Good Luck!
           `;
     
   tinymce.init({
-    selector: "textarea#editor",
-    plugins: "code",
-    toolbar: "bold italic | ifelse | shortcode | code",
-    setup: function (editor) {
+      selector: "textarea#editor",
+      plugins: "code",
+      toolbar: "bold italic | ifelse | shortcode | code | resetbutton",
+      content_style: `
+        span.template-var { 
+          color: #d63384; 
+          background: #f8f9fa; 
+          padding: 0 2px; 
+          border-radius: 3px; 
+          font-family: monospace;
+        }
+      `,
+      extended_valid_elements: 'span[class|data-*]',
+      setup: function (editor) {
+        let isHighlighting = false; // Prevent infinite loop
 
-          editor.on('init', function () {
-          editor.setContent(
-            defaultContent
-        );
+        editor.on('init', function () {
+          editor.setContent(defaultContent);
         });
-      // ✅ Add Reset Button to TinyMCE toolbar
+
+        //  Reset Button
         editor.ui.registry.addButton("resetbutton", {
           text: "Reset",
           tooltip: "Reset to default template",
@@ -161,8 +171,21 @@ Good Luck!
             if (confirm("Are you sure you want to reset the template? All changes will be lost.")) {
               editor.setContent(defaultContent);
             }
-        }
+          }
         });
+
+    // Syntax Highlighting
+        editor.on('SetContent', function(e) {
+          if (isHighlighting) return; // skip if already in the middle
+          isHighlighting = true;
+
+          const html = editor.getContent().replace(/({[{%].*?[}%]})/g, '<span class="template-var">$1</span>');
+          editor.setContent(html, { format: 'raw' });
+
+          isHighlighting = false;
+        });
+      
+
 
       const placeholderItems = [
           { text: "Quality Recommend", value: "{{ '{{' }} quality.recommend }}" },
