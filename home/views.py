@@ -1568,8 +1568,9 @@ def edit(request):
                                                             recommend = recommend,)
 
 
-        #student = StudentData.objects.get(std__roll_number = roll)
+        # student = StudentData.objects.get(std__roll_number = roll)
         stu = StudentLoginInfo.objects.get(roll_number=roll)
+        # print("STU NAME",stu.username)
         application = Application.objects.get(name=stu.username, professor__unique_id=unique)
         paper = Paper.objects.get(application = application )
         project = Project.objects.get(application = application)
@@ -1601,8 +1602,8 @@ def edit(request):
 
         return render(request, 
                         "test.html", 
-                        {
-                            # "student": application,
+                        {   'application':application,
+                            'student': application.std,
                             'subjects':subjects,
                             'subject':subject,
                             'value':value , 
