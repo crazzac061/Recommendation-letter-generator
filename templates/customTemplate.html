@@ -22,21 +22,177 @@ Good Luck!
   src="https://cdn.tiny.cloud/1/zv5jgyybldk6c4dkqb0hqzfykj2etmpab2j6s6hpne21u93o/tinymce/7/tinymce.min.js"
   referrerpolicy="origin"
 ></script>
-<script>
-  tinymce.init({
-    selector: "textarea#editor",
-    plugins: "code",
-    toolbar: "bold italic | ifelse | shortcode | code",
-    setup: function (editor) {
 
-   
+<script>
+
+  let defaultContent = `
+            {% verbatim %}
+            {% if student.gender == 'Male' %}
+              {% set subj = "he" %}
+              {% set obj = "him" %}
+              {% set poss = "his" %}
+            {% else %}
+              {% set subj = "she" %}
+              {% set obj = "her" %}
+              {% set poss = "her" %}
+            {% endif %}
+
+            <p>
+              <br>I would like to {{ quality.recommend }} recommend <b>{{ student.name }}</b> for admission to the graduate program at your
+              university.  
+              I have known {{ firstname }} for about {{ student.years_taught }} now as an undergraduate student
+              in {{ student.program }} Engineering.
+              {% if student.is_pro == 'Yes' %}
+                  Moreover, I was the supervisor for {{ poss }} final year project.
+              {% endif %}
+
+              {% if value %}
+                I taught {{ obj }} {{ subject }}.
+              {% else %}
+                I taught {{ obj }} {% for item in subjects %} {{ item }}, {% endfor %} and {{ subject }}.
+              {% endif %}
+            </p>
+
+
+            <p><br>I recall {{ firstname }} as a {{ quality.quality }} student.
+
+              {% if academics.tentative_ranking == "Batch Topper" %}
+                In fact, {{ subj }} was the topper of {{ poss }} batch in {{ student.program }} Engineering.
+              {% else %}
+                {{ subj|capitalize }} maintained excellent academic performance throughout undergraduate studies,
+                ranking among the {{ academics.tentative_ranking }} students of {{ poss }} batch.
+              {% endif %}
+              As an instructor and {{ poss }} supervisor I had enough opportunity to observe {{ poss }} capabilities closely.
+            </p>
+
+
+            <p><br>
+              {% if student.is_pro == 'Yes' %}
+                I was the supervisor in {{ poss }} project titled {{ project.supervised_project }}.
+                I was quite impressed by {{ poss }} hardworking nature and learning capability. 
+              {% endif %}
+
+              {% if project.final_project %}
+                I supervised {{ obj }} in {{ poss }} project {{ project.final_project }}. I could observe {{ poss }} keen interest
+                and aptitude for research while working on the project.
+              {% endif %}
+
+              {% if student.is_paper == 'Yes' %}
+                In fact, {{ subj }} was also able to publish a paper on {{ paper.paper_title }}.
+              {% endif %}
+            </p>
+
+
+            <p><br>
+              I have noted {{ poss }} {{ quality.presentation }} presentation skills while {{ subj }} presented work at our
+              department as well as in conferences.
+              
+              {% if quality.leadership or quality.teamwork %}
+                I have seen that {{ subj }} has good leadership capability and teamwork spirit.
+              {% endif %}
+              {% if quality.hardworking %}
+                {{ subj|capitalize }} is a very hardworking student who is always eager to learn.
+              {% endif %}
+              {% if quality.friendly %}
+                {{ subj|capitalize }} is a well-spoken person with a friendly and gentle personality.
+              {% endif %}
+              {% if quality.social %}
+                {{ subj|capitalize }} also gave time to different social causes.
+              {% endif %}
+
+              {{ subj|capitalize }} is very helpful and cooperative, eagerly handing over project work to juniors who wanted to
+              further continue the research with proper guidance and resources.  
+              I have also been impressed by {{ poss }} communication skills during presentations and lectures.
+            </p>
+
+
+            <p><br>I appreciate {{ poss }} technical and professional skills.  
+
+              {% if quality.eca != 'No' %}
+                Besides academics, {{ subj }} was also involved in several extra-curricular activities
+                and participated in various competitions organized in and off campus.
+              {% endif %}
+
+              {% if project.deployed %}
+                Unlike most students who limit their project to an academic exercise, {{ subj }} actually deployed the project
+                publicly in our server and maintained it.
+              {% endif %}
+
+              {% if student.intern %}
+                {{ subj|capitalize }} has worked in some IT companies which, I believe, has further added to {{ poss }} technical
+                skills and professional experience.
+              {% endif %}
+            </p>
+
+
+            <p><br>I am quite confident that {{ firstname }}’s skills coupled with academic capability will make {{ obj }} a
+              good candidate for your university. Thus, I would highly recommend {{ obj }} for the graduate program at your esteemed
+              university. Please feel free to contact me if further enquiry is required.
+            </p>
+
+
+            <p><br>{{ teacher.name }},  
+              <br>{{ teacher.title }},  
+              <br>Department of {{ teacher.department }} Engineering  
+              <br>Pulchowk Campus, Institute of Engineering, Tribhuvan University  
+              <br>Phone: {{ teacher.phone }}  
+              <br>Mail: {{ teacher.email }}
+            </p>
+            {% endverbatim %}
+
+          `;
+    
+  tinymce.init({
+      selector: "textarea#editor",
+      plugins: "code",
+      toolbar: "bold italic | ifelse | shortcode | code | resetbutton",
+      content_style: `
+        span.template-var { 
+          color: #d63384; 
+          background: #f8f9fa; 
+          padding: 0 2px; 
+          border-radius: 3px; 
+          font-family: monospace;
+        }
+      `,
+      extended_valid_elements: 'span[class|data-*]',
+      setup: function (editor) {
+        let isHighlighting = false; // Prevent infinite loop
+
+        editor.on('init', function () {
+          editor.setContent(defaultContent);
+        });
+
+        //  Reset Button
+        editor.ui.registry.addButton("resetbutton", {
+          text: "Reset",
+          tooltip: "Reset to default template",
+          onAction: function () {
+            if (confirm("Are you sure you want to reset the template? All changes will be lost.")) {
+              editor.setContent(defaultContent);
+            }
+          }
+        });
+
+    // Syntax Highlighting
+        editor.on('SetContent', function(e) {
+          if (isHighlighting) return; // skip if already in the middle
+          isHighlighting = true;
+
+          const html = editor.getContent().replace(/({[{%].*?[}%]})/g, '<span class="template-var">$1</span>');
+          editor.setContent(html, { format: 'raw' });
+
+          isHighlighting = false;
+        });
+      
+
 
       const placeholderItems = [
           { text: "Quality Recommend", value: "{{ '{{' }} quality.recommend }}" },
           { text: "Student Name", value: "{{ '{{' }} student.name }}" },
           { text: "First Name", value: "{{ '{{' }} firstname }}" },
           { text: "Years Taught", value: "{{ '{{' }} student.years_taught }}" },
-          { text: "Program", value: "{{ '{{' }} student.std.program }}" },
+          { text: "Program", value: "{{ '{{' }} student.program }}" },
           { text: "Is Pro", value: "{{ '{{' }} student.is_pro }}" },
           { text: "Value", value: "{{ '{{' }} value }}" },
           { text: "Subject", value: "{{ '{{' }} subject }}" },
@@ -54,11 +210,11 @@ Good Luck!
           { text: "ECA", value: "{{ '{{' }} quality.eca }}" },
           { text: "Deployed", value: "{{ '{{' }} project.deployed }}" },
           { text: "Intern", value: "{{ '{{' }} student.intern }}" },
-          { text: "Professor Name", value: "{{ '{{' }} student.professor.name }}" },
-          { text: "Professor Title", value: "{{ '{{' }} student.professor.title }}" },
-          { text: "Professor Department", value: "{{ '{{' }} student.professor.department }}" },
-          { text: "Professor Phone", value: "{{ '{{' }} student.professor.phone }}" },
-          { text: "Professor Email", value: "{{ '{{' }} student.professor.email }}" },
+          { text: "Professor Name", value: "{{ '{{' }} teacher.name }}" },
+          { text: "Professor Title", value: "{{ '{{' }} teacher.title }}" },
+          { text: "Professor Department", value: "{{ '{{' }} teacher.department }}" },
+          { text: "Professor Phone", value: "{{ '{{' }} teacher.phone }}" },
+          { text: "Professor Email", value: "{{ '{{' }} teacher.email }}" },
         ];
 
 
@@ -221,6 +377,9 @@ Good Luck!
     <div class="button-container">
       <div class="button">
         <input type="submit" value="Save Template" />
+        <div class="button-container">
+          <button type="button" class="btn btn-reset" onclick="tinymce.get('editor').setContent(defaultContent)">Reset Template</button>
+        </div>
       </div>
     </div>
   </form>
@@ -252,5 +411,32 @@ Good Luck!
   margin-bottom: 5px;
   text-align: left;
 }
+
+.button-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.btn {
+  width: 100%;
+  height: 45px;
+  border: none;
+  border-radius: 5px;
+  color: #ffffffe2;
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-reset {
+  background: #1a86fb;
+}
+.btn-reset:hover {
+  background: #0056b3;
+}
+
+
 </style>
 {% endblock body %}
