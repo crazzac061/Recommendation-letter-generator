@@ -346,15 +346,23 @@
 </div>
 
 <script>
-  document.getElementById('template').addEventListener('change', function() {
-    var form = document.getElementById('recommendationForm');
-    var selectedTemplate = this.value;
-    if (selectedTemplate === 'default') {
-      form.action = '/edit';
-    } else {
-      form.action = '/renderCustom';
+    const form = document.getElementById('recommendationForm');
+    const templateSelect = document.getElementById('template');
+
+    function updateFormAction() {
+      const selectedTemplate = templateSelect.value;
+      if (selectedTemplate.toLowerCase() === 'default') {
+        form.action = '/edit';
+      } else {
+        form.action = '/renderCustom';
+      }
     }
-  });
+
+    // Update action on page load
+    updateFormAction();
+
+    // Update action when dropdown changes
+    templateSelect.addEventListener('change', updateFormAction);
 
     function toggleInput(field) {
     const select = document.getElementById(field + 'Select');
