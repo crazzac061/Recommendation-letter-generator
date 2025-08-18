@@ -1577,6 +1577,8 @@ def edit(request):
         quality = Qualities.objects.get(application = application)
         academics = Academics.objects.get(application = application)
         teacher_name = application.professor.name
+        teacher_model = application.professor
+
         files = Files.objects.get(application = application)
 
         bisaya=application.subjects
@@ -1610,7 +1612,7 @@ def edit(request):
                             "university": university,
                             "quality": quality,
                             "academics": academics,
-                            "teacher": teacher_name,
+                            "teacher": teacher_model,
                             "files": files, 
                         }
                     )
@@ -1723,6 +1725,8 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
             jinja_template = Template(default_template_content)
         else:
             jinja_template = Template(template_obj.template)
+        print("GOT TEMPLATE NAME", template_name)
+        
         rendered_letter = jinja_template.render({
             'application':application,
             "student": stu,
