@@ -11,221 +11,279 @@
         <form method="POST" , action="/final">
             <div contenteditable="true" name="textbox" id="textbox">
 
-                {% if student.std.gender == 'Male' %}
-                
-                 <p>
-                    <br>I would like to {{quality.recommend}} recommend <b>{{student.name}}</b> for admission to the graduate program at your
-                    university.
-                    I have known {{firstname}} for about {{student.years_taught}} now as an undergraduate student
-                    in {{student.std.program}} Engineering.
-                    {%if student.is_pro == 'Yes'%}
-                        Moreover, I was the supervisor for his final year project.
-                    {%endif%}
-                    
-                     
-                    {% if value %}
-                    I taught him {{subject}}.
-                    {%else%}
-                    I taught him
-                    {%for item in subjects %} {{item}}, {%endfor%} and {{subject}}.
 
-                    {%endif%}
+                {% if student.gender|lower == "male" or student.gender|lower == "m" %}
+                  {% with pronoun="he" possessive="his" objective="him" %}
+                    <p>
+                        <br>I would like to {{quality.recommend}} recommend <b>{{application.name}}</b> for admission to the graduate program at your
+                        university.
+                        I have known {{firstname}} for about {{student.years_taught}} now as an undergraduate student
+                        in {{student.program}} Engineering.
+                        {% if student.is_pro == 'Yes' %}
+                            Moreover, I was the supervisor for {{objective}} final year project.
+                        {% endif %}
 
-                </p>
+                        {% if value %}
+                            I taught {{objective}} {{subject}}.
+                        {% else %}
+                            I taught {{objective}} {% for item in subjects %} {{item}}, {% endfor %} and {{subject}}.
+                        {% endif %}
+                    </p>
 
+                    <p><br>I recall {{firstname}} as a {{quality.quality}} student.
+                        {% if academics.tentative_ranking == "Batch Topper" %}
+                            In fact, {{pronoun}} was the topper of {{possessive}} batch in {{student.program}} Engineering.
+                        {% else %}
+                            {{pronoun|capfirst}} maintained excellent academic performance throughout
+                            {{possessive}} undergraduate ranking among the {{academics.tentative_ranking}} students of the batch.
+                        {% endif %}
+                        As an instructor and {{possessive}} supervisor I had enough opportunity to observe {{possessive}} capabilities closely.
+                    </p>
 
+                    <p><br>
+                        {% if student.is_pro == 'Yes' %}
+                            I was the supervisor in {{possessive}} project titled {{project.supervised_project}}.
+                            I was quite impressed by {{possessive}} hardworking nature and learning capability. 
+                        {% endif %}
 
-                <p><br>I recall {{firstname}} as a {{quality.quality}} student.
-                    
-                    {% if academics.tentative_ranking == "Batch Topper" %}
-                    In fact, he was the topper of his batch in {{student.std.program}} Engineering.
-                    {% else %}
-                    He maintained excellent academic performance throughout his undergraduate
-                    ranking among the {{academics.tentative_ranking}} students of his batch.
-                    {% endif %}
-                    As an instructor and his supervisor
-                    too I had enough opportunity is observe his capabilities closely.</p>
+                        {% if project.final_project %}
+                            I supervised {{objective}} in {{possessive}} project {{project.final_project}}. 
+                            I could observe {{possessive}} keen interest and aptitude for research while working on the project.
+                        {% endif %}
 
+                        {% if student.is_paper == 'Yes' %}
+                            In fact, {{pronoun}} was also able to publish a paper on {{paper.paper_title}}.
+                        {% endif %}
+                    </p>
 
-                <p><br>
+                    <p><br>I have noted {{possessive}} {{quality.presentation}} presentation skills while {{pronoun}} presented work at our
+                        department as well as in the conference.
+                        {% if quality.leadership or quality.teamwork %}
+                            I have seen that {{pronoun}} has good leadership capability and has a teamwork spirit.
+                        {% endif %}
+                        {% if quality.hardworking %}
+                            {{pronoun|capfirst}} is a very hardworking student who is always eager to learn.
+                        {% endif %}
+                        {% if quality.friendly %}
+                            {{pronoun|capfirst}} is a well-spoken person with a friendly and gentle personality.
+                        {% endif %}
+                        {% if quality.social %}
+                            {{pronoun|capfirst}} also has given {{possessive}} time to different social causes.
+                        {% endif %}
+                        {{pronoun|capfirst}} is very helpful and cooperative. {{pronoun|capfirst}} eagerly handed over project work 
+                        to juniors who wanted to continue research with proper guidance and resources.
+                        I have also been impressed by {{possessive}} communication skills during project presentations and lectures.
+                    </p>
 
-                    {%if student.is_pro == 'Yes'%}
-                    I was the supervisor in his project titled {{project.supervised_project}}.
-                    I was quite impressed by his hardworking nature and learning capability. 
-                    {%endif%}
+                    <p><br>I appreciate {{possessive}} technical and professional skills.
+                        {% if quality.extracirricular != 'No' %}
+                            Besides academics, {{pronoun}} was also involved in several extra-curricular activities.
+                            {{pronoun|capfirst}} participated in various competitions organized in and off the campus.
+                        {% endif %}
+                        {% if project.deployed %}
+                            Unlike most students who limit their project to an academic exercise, {{pronoun}} actually deployed 
+                            {{possessive}} project publicly in our server and maintained it.
+                        {% endif %}
+                        {% if student.intern %}
+                            {{pronoun|capfirst}} has worked in some IT companies which, I believe, has further added 
+                            to {{possessive}} technical skills and professional experience.
+                        {% endif %}
+                    </p>
 
-                    {%if project.final_project%}
-                    I supervised him in his project {{project.final_project}}. I could observe his keen interest
-                    and aptitude for research while working on the project.
-                    {%endif%}
-                    
+                    <p><br>I am quite confident that {{firstname}}'s skills coupled with academic capability will make {{objective}} a
+                        good candidate for your university. Thus, I would highly recommend {{objective}} for the graduate program 
+                        at your esteemed university. Please feel free to contact me if further enquiry is required.</p>
 
-                    {%if student.is_paper == 'Yes'%}
-                    In fact, he was also able to publish a paper on {{paper.paper_title}}.
-                    {%endif%}
+                    <p><br>{{teacher.name}},
+                        <br>{{teacher.title}},
+                        <br>Department of {{teacher.department}} Engineering
+                        <br>Pulchowk Campus, Institute of Engineering, Tribhuvan University
+                        <br>Phone: {{teacher.phone}}
+                        <br>Mail: {{teacher.email}}
+                    </p>
+                  {% endwith %}
+                {% elif student.gender|lower == "female" or student.gender|lower == "f" %}
+                  {% with pronoun="she" possessive="her" objective="her" %}
+                    <p>
+                        <br>I would like to {{quality.recommend}} recommend <b>{{application.name}}</b> for admission to the graduate program at your
+                        university.
+                        I have known {{firstname}} for about {{student.years_taught}} now as an undergraduate student
+                        in {{student.program}} Engineering.
+                        {% if student.is_pro == 'Yes' %}
+                            Moreover, I was the supervisor for {{objective}} final year project.
+                        {% endif %}
 
-                </p>
-                
+                        {% if value %}
+                            I taught {{objective}} {{subject}}.
+                        {% else %}
+                            I taught {{objective}} {% for item in subjects %} {{item}}, {% endfor %} and {{subject}}.
+                        {% endif %}
+                    </p>
 
-                <p><br>I have noted his {{quality.presentation}} presentation skills while he presented his work at our
-                    department as well as in the
-                    conference.
-                    {%if quality.leadership or quality.teamwork%}
-                    I have seen that he has good leadership capability and has a teamwork spirit.
-                    {%endif%}
-                    {%if quality.hardworking%}
-                    He is a very hardworking student who is always eager to learn.
-                    {%endif%}
-                    {%if quality.friendly%}
-                    He is a well-spoken person with a friendly and gentle personality.
-                    {%endif%}
-                    {%if quality.social%}
-                    He also has given his time to different social causes.
-                    {%endif%}
-                    He is very helpful and cooperative student. He eagerly handed over his
-                    project work to his juniors who wanted to further continue the research on the topic along
-                    with proper guidance and resources. I have also been impressed by his communication skills during
-                    project presentations and lectures.</p>
+                    <p><br>I recall {{firstname}} as a {{quality.quality}} student.
+                        {% if academics.tentative_ranking == "Batch Topper" %}
+                            In fact, {{pronoun}} was the topper of {{possessive}} batch in {{student.program}} Engineering.
+                        {% else %}
+                            {{pronoun|capfirst}} maintained excellent academic performance throughout
+                            {{possessive}} undergraduate ranking among the {{academics.tentative_ranking}} students of the batch.
+                        {% endif %}
+                        As an instructor and {{possessive}} supervisor I had enough opportunity to observe {{possessive}} capabilities closely.
+                    </p>
 
+                    <p><br>
+                        {% if student.is_pro == 'Yes' %}
+                            I was the supervisor in {{possessive}} project titled {{project.supervised_project}}.
+                            I was quite impressed by {{possessive}} hardworking nature and learning capability. 
+                        {% endif %}
 
-                <p><br>I appreciate his technical and professional skills.
-                    {%if quality.extracirricular != 'No'%}
-                    Besides academics, he was also involved in several extra-curricular activities .
-                    He participated in various competitions organized in and off the campus.
-                    {%endif%}
-                    {%if project.deployed%}
-                    Unlike, most students who limit their project to an
-                    academic exercise, he actually deployed his project publicly in our server and maintained it.
-                    {%endif%}
-                    {%if student.intern%}
-                    He has worked in some IT companies which, I believe, has further added to his technical skills and
-                    professional experience.
-                    {%endif%}
-            
-                </p>
+                        {% if project.final_project %}
+                            I supervised {{objective}} in {{possessive}} project {{project.final_project}}. 
+                            I could observe {{possessive}} keen interest and aptitude for research while working on the project.
+                        {% endif %}
 
-                <p><br>I am quite confident that {{firstname}}'s skills coupled with academic capability will make him a
-                    good candidate for
-                    your university. Thus, I would highly recommend him for the graduate program at your esteemed
-                    university. Please feel free to contact me if further enquiry is required.</p>
+                        {% if student.is_paper == 'Yes' %}
+                            In fact, {{pronoun}} was also able to publish a paper on {{paper.paper_title}}.
+                        {% endif %}
+                    </p>
 
-                <p><br>{{teacher.name}},
-                    <br>{{teacher.title}},
-                    <br>Department of {{teacher.department}} Engineering
-                    <br>Pulchowk Campus, Institute of Engineering, Tribhuvan University
-                    <br>Phone: {{teacher.phone}}
-                    <br>Mail: {{teacher.email}}
-                </p> 
+                    <p><br>I have noted {{possessive}} {{quality.presentation}} presentation skills while {{pronoun}} presented work at our
+                        department as well as in the conference.
+                        {% if quality.leadership or quality.teamwork %}
+                            I have seen that {{pronoun}} has good leadership capability and has a teamwork spirit.
+                        {% endif %}
+                        {% if quality.hardworking %}
+                            {{pronoun|capfirst}} is a very hardworking student who is always eager to learn.
+                        {% endif %}
+                        {% if quality.friendly %}
+                            {{pronoun|capfirst}} is a well-spoken person with a friendly and gentle personality.
+                        {% endif %}
+                        {% if quality.social %}
+                            {{pronoun|capfirst}} also has given {{possessive}} time to different social causes.
+                        {% endif %}
+                        {{pronoun|capfirst}} is very helpful and cooperative. {{pronoun|capfirst}} eagerly handed over project work 
+                        to juniors who wanted to continue research with proper guidance and resources.
+                        I have also been impressed by {{possessive}} communication skills during project presentations and lectures.
+                    </p>
 
-                
-            {% else %}
-                <p>
-                    <br>I would like to recommend <b>{{student.name}}</b> for admission to the graduate program at your
-                    university.
-                    I have known {{firstname}} for about {{student.years_taught}} now as an undergraduate student
-                    in {{student.std.program}} Engineering.
-                    {%if student.is_pro == 'Yes'%}
-                        Moreover, I was the supervisor for her final year project.
-                    {%endif%}
-                    
-                     
-                    {% if value %}
-                    I taught her {{subject}}.
-                    {%else%}
-                    I taught her
-                    {%for item in subjects %} {{item}}, {%endfor%} and {{subject}}.
+                    <p><br>I appreciate {{possessive}} technical and professional skills.
+                        {% if quality.extracirricular != 'No' %}
+                            Besides academics, {{pronoun}} was also involved in several extra-curricular activities.
+                            {{pronoun|capfirst}} participated in various competitions organized in and off the campus.
+                        {% endif %}
+                        {% if project.deployed %}
+                            Unlike most students who limit their project to an academic exercise, {{pronoun}} actually deployed 
+                            {{possessive}} project publicly in our server and maintained it.
+                        {% endif %}
+                        {% if student.intern %}
+                            {{pronoun|capfirst}} has worked in some IT companies which, I believe, has further added 
+                            to {{possessive}} technical skills and professional experience.
+                        {% endif %}
+                    </p>
 
-                    {%endif%}
+                    <p><br>I am quite confident that {{firstname}}'s skills coupled with academic capability will make {{objective}} a
+                        good candidate for your university. Thus, I would highly recommend {{objective}} for the graduate program 
+                        at your esteemed university. Please feel free to contact me if further enquiry is required.</p>
 
-                </p>
+                    <p><br>{{teacher.name}},
+                        <br>{{teacher.title}},
+                        <br>Department of {{teacher.department}} Engineering
+                        <br>Pulchowk Campus, Institute of Engineering, Tribhuvan University
+                        <br>Phone: {{teacher.phone}}
+                        <br>Mail: {{teacher.email}}
+                    </p>
+                  {% endwith %}
+                {% else %}
+                  {% with pronoun="they" possessive="their" objective="them" %}
+                    <p>
+                        <br>I would like to {{quality.recommend}} recommend <b>{{application.name}}</b> for admission to the graduate program at your
+                        university.
+                        I have known {{firstname}} for about {{student.years_taught}} now as an undergraduate student
+                        in {{student.program}} Engineering.
+                        {% if student.is_pro == 'Yes' %}
+                            Moreover, I was the supervisor for {{objective}} final year project.
+                        {% endif %}
 
+                        {% if value %}
+                            I taught {{objective}} {{subject}}.
+                        {% else %}
+                            I taught {{objective}} {% for item in subjects %} {{item}}, {% endfor %} and {{subject}}.
+                        {% endif %}
+                    </p>
 
+                    <p><br>I recall {{firstname}} as a {{quality.quality}} student.
+                        {% if academics.tentative_ranking == "Batch Topper" %}
+                            In fact, {{pronoun}} was the topper of {{possessive}} batch in {{student.program}} Engineering.
+                        {% else %}
+                            {{pronoun|capfirst}} maintained excellent academic performance throughout
+                            {{possessive}} undergraduate ranking among the {{academics.tentative_ranking}} students of the batch.
+                        {% endif %}
+                        As an instructor and {{possessive}} supervisor I had enough opportunity to observe {{possessive}} capabilities closely.
+                    </p>
 
-                <p><br>I recall {{firstname}} as a {{quality.quality}} student.
-                    
-                    {% if academics.tentative_ranking == "Batch Topper" %}
-                    In fact, she was the topper of his batch in {{student.std.program}} Engineering.
-                    {% else %}
-                    She maintained excellent academic performance throughout her undergraduate
-                    ranking among the {{academics.tentative_ranking}} students of her batch.
-                    {% endif %}
-                    As an instructor and her supervisor
-                    too I had enough opportunity is observe her capabilities closely.</p>
+                    <p><br>
+                        {% if student.is_pro == 'Yes' %}
+                            I was the supervisor in {{possessive}} project titled {{project.supervised_project}}.
+                            I was quite impressed by {{possessive}} hardworking nature and learning capability. 
+                        {% endif %}
 
+                        {% if project.final_project %}
+                            I supervised {{objective}} in {{possessive}} project {{project.final_project}}. 
+                            I could observe {{possessive}} keen interest and aptitude for research while working on the project.
+                        {% endif %}
 
-                <p><br>
+                        {% if student.is_paper == 'Yes' %}
+                            In fact, {{pronoun}} was also able to publish a paper on {{paper.paper_title}}.
+                        {% endif %}
+                    </p>
 
-                    {%if student.is_pro == 'Yes'%}
-                    I was the supervisor in her project titled {{project.supervised_project}}.
-                    I was quite impressed by her hardworking nature and learning capability. 
-                    {%endif%}
+                    <p><br>I have noted {{possessive}} {{quality.presentation}} presentation skills while {{pronoun}} presented work at our
+                        department as well as in the conference.
+                        {% if quality.leadership or quality.teamwork %}
+                            I have seen that {{pronoun}} has good leadership capability and has a teamwork spirit.
+                        {% endif %}
+                        {% if quality.hardworking %}
+                            {{pronoun|capfirst}} is a very hardworking student who is always eager to learn.
+                        {% endif %}
+                        {% if quality.friendly %}
+                            {{pronoun|capfirst}} is a well-spoken person with a friendly and gentle personality.
+                        {% endif %}
+                        {% if quality.social %}
+                            {{pronoun|capfirst}} also has given {{possessive}} time to different social causes.
+                        {% endif %}
+                        {{pronoun|capfirst}} is very helpful and cooperative. {{pronoun|capfirst}} eagerly handed over project work 
+                        to juniors who wanted to continue research with proper guidance and resources.
+                        I have also been impressed by {{possessive}} communication skills during project presentations and lectures.
+                    </p>
 
-                    {%if project.final_project%}
-                    I supervised in her project {{project.final_project}}. I could observe her keen interest
-                    and aptitude for research while working on the project.
-                    {%endif%}
-                    
+                    <p><br>I appreciate {{possessive}} technical and professional skills.
+                        {% if quality.extracirricular != 'No' %}
+                            Besides academics, {{pronoun}} was also involved in several extra-curricular activities.
+                            {{pronoun|capfirst}} participated in various competitions organized in and off the campus.
+                        {% endif %}
+                        {% if project.deployed %}
+                            Unlike most students who limit their project to an academic exercise, {{pronoun}} actually deployed 
+                            {{possessive}} project publicly in our server and maintained it.
+                        {% endif %}
+                        {% if student.intern %}
+                            {{pronoun|capfirst}} has worked in some IT companies which, I believe, has further added 
+                            to {{possessive}} technical skills and professional experience.
+                        {% endif %}
+                    </p>
 
-                    {%if student.is_paper == 'Yes'%}
-                    In fact, she was also able to publish a paper on {{paper.paper_title}}.
-                    {%endif%}
+                    <p><br>I am quite confident that {{firstname}}'s skills coupled with academic capability will make {{objective}} a
+                        good candidate for your university. Thus, I would highly recommend {{objective}} for the graduate program 
+                        at your esteemed university. Please feel free to contact me if further enquiry is required.</p>
 
-                </p>
-                
+                    <p><br>{{teacher.name}},
+                        <br>{{teacher.title}},
+                        <br>Department of {{teacher.department}} Engineering
+                        <br>Pulchowk Campus, Institute of Engineering, Tribhuvan University
+                        <br>Phone: {{teacher.phone}}
+                        <br>Mail: {{teacher.email}}
+                    </p>
+                  {% endwith %}
+                {% endif %}
 
-                <p><br>I have noted her {{quality.presentation}} presentation skills while she presented her work at our
-                    department as well as in the conference.
-                    {%if quality.leadership or quality.teamwork%}
-                    I have seen that she has good leadership capability and has a teamwork spirit.
-                    {%endif%}
-                    {%if quality.hardworking%}
-                    She is a very hardworking student who is always eager to learn.
-                    {%endif%}
-                    {%if quality.friendly%}
-                    She is a well-spoken person with a friendly and gentle personality.
-                    {%endif%}
-                    {%if quality.social%}
-                    She also has given his time to different social causes.
-                    {%endif%}
-                    She is very helpful and cooperative student. She eagerly handed over her
-                    project work to her juniors who wanted to further continue the research on the topic along
-                    with proper guidance and resources. I have also been impressed by her communication skills during
-                    project presentations and lectures.</p>
-
-
-                <p><br>I appreciate her technical and professional skills.
-                    {%if qualtiy.eca != 'No'%}
-                    Besides academics, she was also involved in several extra-curricular activities .
-                    She participated in various competitions organized in and off the campus.
-                    {%endif%}
-                    {%if project.deployed%}
-                    Unlike, most students who limit their project to an
-                    academic exercise, she actually deployed her project publicly in our server and maintained it.
-                    {%endif%}
-                    {%if student.intern%}
-                    She has worked in some IT companies which, I believe, has further added to her technical skills and
-                    professional experience.
-                    {%endif%}
-            
-                </p>
-
-                <p><br>I am quite confident that {{firstname}}'s skills coupled with academic capability will make her a
-                    good candidate for
-                    your university. Thus, I would highly recommend her for the graduate program at your esteemed
-                    university. Please feel free to contact me if further enquiry is required.</p>
-
-                <p><br>{{teacher.name}},
-                    <br>{{teacher.title}},
-                    <br>Department of {{teacher.department}} Engineering
-                    <br>Pulchowk Campus, Institute of Engineering, Tribhuvan University
-                    <br>Phone: {{teacher.phone}}
-                    <br>Mail: {{teacher.email}}
-                </p> 
-
-
-
- 
-            {% endif %}
 
             </div>
 
@@ -234,7 +292,7 @@
     
 
 
-    <input name="roll" value="{{student.std.roll_number}}" type="hidden">
+    <input name="roll" value="{{student.roll_number}}" type="hidden">
     <!-- <textarea name="textarea" id="textarea" hidden="true"></textarea>  -->
 
     <textarea name="textarea1" id="textarea1" hidden="true"></textarea>

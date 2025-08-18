@@ -38,7 +38,7 @@ Good Luck!
             {% endif %}
 
             <p>
-              <br>I would like to {{ quality.recommend }} recommend <b>{{ student.name }}</b> for admission to the graduate program at your
+              <br>I would like to {{ quality.recommend }} recommend <b>{{ application.name }}</b> for admission to the graduate program at your
               university.  
               I have known {{ firstname }} for about {{ student.years_taught }} now as an undergraduate student
               in {{ student.program }} Engineering.
@@ -189,7 +189,7 @@ Good Luck!
 
       const placeholderItems = [
           { text: "Quality Recommend", value: "{{ '{{' }} quality.recommend }}" },
-          { text: "Student Name", value: "{{ '{{' }} student.name }}" },
+          { text: "Student Name", value: "{{ '{{' }} application.name }}" },
           { text: "First Name", value: "{{ '{{' }} firstname }}" },
           { text: "Years Taught", value: "{{ '{{' }} student.years_taught }}" },
           { text: "Program", value: "{{ '{{' }} student.program }}" },
