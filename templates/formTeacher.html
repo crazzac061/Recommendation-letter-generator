@@ -21,9 +21,11 @@
   
   <span class="details">Other projects: {{project.final_project}}</span>
   <br/>
-  <span class="details">University: {{university.uni_name}}</span> <br />
-  <span class="details">University Deadline: {{university.uni_deadline}}</span> <br />
-  <span class="details">Program Applied: {{university.program_applied}}</span> <br />
+  {% for university in universities %}
+    <span class="details">University: {{university.uni_name}}</span> <br />
+    <span class="details">University Deadline: {{university.uni_deadline}}</span> <br />
+    <span class="details">Program Applied: {{university.program_applied}}</span> <br />
+  {% endfor %}
   <span class="details">LinkedIn Profile: {{linkedin}}</span> <br />
 <br>
   <span class="details">Extra curricular activities: {{quality.extracirricular}}</span> <br />
