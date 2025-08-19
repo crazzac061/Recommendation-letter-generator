@@ -550,7 +550,8 @@ def make_letter(request):
         personal_statement = appli.personal_statement
         recommendation_purpose = appli.recommendation_purpose
 
-        university = University.objects.get(application=appli)
+        # Get all universities instead of just one
+        universities = University.objects.filter(application=appli)
         quality = Qualities.objects.get(application=appli)
         academics = Academics.objects.get(application=appli)
         files = Files.objects.get(application=appli)
@@ -569,7 +570,7 @@ def make_letter(request):
                 "roll": roll,
                 "paper": paper,
                 "project": project,
-                "university": university,
+                "university": universities,
                 "quality": quality,
                 "academics": academics,
                 "teacher": teacher_name,
@@ -805,9 +806,13 @@ def studentform2(request):
         naam = request.POST.get("naam")
         prof_name = request.POST.get("prof_name")
 
-        uuni = request.POST.get("university")
-        uni_program = request.POST.get("program_applied")
-        uni_deadline = request.POST.get("deadline")
+        # Get multiple values from form (lists of universities, programs, deadlines)
+        universities = request.POST.getlist("universities")
+        programs_applied = request.POST.getlist("programs_applied")
+        deadlines = request.POST.getlist("deadlines")
+        
+        # Define nearest deadline for email
+        uni_deadline = min(deadlines) if deadlines else 'No deadline'
         aca_gpa = request.POST.get("gpa")
         aca_ranking = request.POST.get("tentative_ranking")
         file_transcript = request.FILES.get("transcript")
@@ -841,17 +846,19 @@ def studentform2(request):
         info.is_generated = False
         info.save()
 
-        uni_info = University(
-            uni_name = uuni,
-            uni_deadline = uni_deadline,
-            program_applied = uni_program,
-            application = info,
-        )
-        if University.objects.filter(application = info).exists():
-            uni = University.objects.get(application=info)
-            uni.delete()
-            
-        uni_info.save()
+        # Save all universities submitted
+        for i in range(len(universities)):
+            if universities[i].strip():  # avoid empty rows
+                uni_info = University(
+                    uni_name=universities[i],
+                    uni_deadline=deadlines[i],
+                    program_applied=programs_applied[i],
+                    application=info,
+                )
+                if University.objects.filter(application = info).exists():
+                    uni = University.objects.get(application=info)
+                    uni.delete()
+                uni_info.save()
 
         academics_info = Academics(
             gpa = aca_gpa,
