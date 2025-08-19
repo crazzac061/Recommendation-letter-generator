@@ -1769,6 +1769,7 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
             "teacher": teacher_model,
             "files": files,
         })
+        print("Quality",quality.quality)
         return render(request, 'test2.html', {'letter': rendered_letter, 'student': application.std, 'template_name':template_name})
 
 

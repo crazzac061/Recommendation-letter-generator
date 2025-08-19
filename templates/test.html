@@ -15,16 +15,17 @@
                 {% if student.gender|lower == "male" or student.gender|lower == "m" %}
                   {% with pronoun="he" possessive="his" objective="him" %}
                     <p>
+
                         <br>I would like to {{quality.recommend}} recommend <b>{{application.name}}</b> for admission to the graduate program at your
                         university.
-                        I have known {{firstname}} for about {{student.years_taught}} now as an undergraduate student
+                        I have known {{firstname}} for about {{application.years_taught}} now as an undergraduate student
                         in {{student.program}} Engineering.
-                        {% if student.is_pro == 'Yes' %}
+                        {% if application.is_pro == 'Yes' %}
                             Moreover, I was the supervisor for {{objective}} final year project.
                         {% endif %}
 
                         {% if value %}
-                            I taught {{objective}} {{subject}}.
+                            I taught {{objective}} {{application.subject}}.
                         {% else %}
                             I taught {{objective}} {% for item in subjects %} {{item}}, {% endfor %} and {{subject}}.
                         {% endif %}
@@ -41,7 +42,7 @@
                     </p>
 
                     <p><br>
-                        {% if student.is_pro == 'Yes' %}
+                        {% if application.is_pro == 'Yes' %}
                             I was the supervisor in {{possessive}} project titled {{project.supervised_project}}.
                             I was quite impressed by {{possessive}} hardworking nature and learning capability. 
                         {% endif %}
@@ -51,7 +52,7 @@
                             I could observe {{possessive}} keen interest and aptitude for research while working on the project.
                         {% endif %}
 
-                        {% if student.is_paper == 'Yes' %}
+                        {% if application.is_paper == 'Yes' %}
                             In fact, {{pronoun}} was also able to publish a paper on {{paper.paper_title}}.
                         {% endif %}
                     </p>
