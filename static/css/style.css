@@ -541,3 +541,58 @@ form .button input:hover {
     transform: translateX(-100%);
   }
 }
+
+/* University section styling */
+#university-section {
+  display: flex;
+  flex-direction: column; /* stack entries vertically */
+  gap: 20px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.university-entry {
+  display: flex;
+  flex-direction: column; /* inputs inside each entry stacked vertically */
+  gap: 10px;
+  padding: 15px 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fafafa;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.inputs-wrapper {
+  display: flex;
+  gap: 10px; /* inputs remain horizontal inside each entry */
+  flex-wrap: wrap; /* wrap on small screens */
+}
+
+.university-entry .input-box {
+  display: flex;
+  flex-direction: column; /* label on top of input */
+  flex: 1;
+}
+
+.university-entry .input-box input {
+  background-color: #fff;
+}
+
+/* Add Another University button */
+.add-university-btn {
+  display: block; /* ensures it is below the section */
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #71b7e6, #c36cbb);
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-university-btn:hover {
+  background: linear-gradient(-135deg, #71b7e6, #9b59b6);
+}
+

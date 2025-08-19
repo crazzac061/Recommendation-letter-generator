@@ -8,20 +8,31 @@
       <form method="POST", action="/studentform2" , enctype='multipart/form-data'>
       {% csrf_token %}
         <div class="user-details">
-          <div class="input-box">
-            <span class="details">Requesting University *</span>
-            <input type="text" placeholder="University Name" name="university" required>
-          </div>
+          <div id="university-section">
+            <div class="university-entry">
+              <div class="inputs-wrapper">
+                <div class="input-box">
+                  <span class="details">Requesting University *</span>
+                  <input type="text" placeholder="University Name" name="universities" required>
+                </div>
 
-          <div class="input-box">
-            <span class="details">Program Applied *</span>
-            <input type="text" placeholder="Program Applied" name="program_applied" required>
-          </div>
+                <div class="input-box">
+                  <span class="details">Program Applied *</span>
+                  <input type="text" placeholder="Program Applied" name="programs_applied" required>
+                </div>
 
-          <div class="input-box">
-            <span class="details">Deadline *</span>
-              <input type="date" name="deadline" required>
+                <div class="input-box">
+                  <span class="details">Deadline *</span>
+                  <input type="date" name="deadlines" required>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <!-- Add button -->
+          <div>
+            <button type="button" class="add-university-btn" onclick="addUniversity()">+ Add Another University</button>
+          </div>
 
           <div class="input-box">
             <span class="details">GPA: *</span>
