@@ -241,6 +241,42 @@
       select.required = false;
     }
   }
+
+  function addUniversity() {
+    const section = document.getElementById("university-section");
+    const originalEntry = document.querySelector(".university-entry");
+
+    // Clone the first entry
+    const newEntry = originalEntry.cloneNode(true);
+
+    // Clear input values
+    newEntry.querySelectorAll("input").forEach(input => input.value = "");
+
+    // Add remove button only to cloned entry
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "remove-university-btn";
+    removeBtn.innerText = "Remove";
+    removeBtn.onclick = function() {
+      section.removeChild(newEntry);
+    };
+
+    newEntry.appendChild(removeBtn);
+
+    // Append cloned entry
+    section.appendChild(newEntry);
+  }
+
+
+
+  // Remove button function
+  function removeUniversity(button) {
+    const section = document.getElementById("university-section");
+    const entry = button.parentElement;
+    if (section.children.length > 1) {
+      section.removeChild(entry);
+    }
+  }
 </script>
 
 

@@ -545,7 +545,7 @@ form .button input:hover {
 /* University section styling */
 #university-section {
   display: flex;
-  flex-direction: column; /* stack entries vertically */
+  flex-direction: column;
   gap: 20px;
   margin-top: 10px;
   margin-bottom: 15px;
@@ -553,7 +553,7 @@ form .button input:hover {
 
 .university-entry {
   display: flex;
-  flex-direction: column; /* inputs inside each entry stacked vertically */
+  flex-direction: column;
   gap: 10px;
   padding: 15px 20px;
   border: 1px solid #ccc;
@@ -564,13 +564,13 @@ form .button input:hover {
 
 .inputs-wrapper {
   display: flex;
-  gap: 10px; /* inputs remain horizontal inside each entry */
-  flex-wrap: wrap; /* wrap on small screens */
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .university-entry .input-box {
   display: flex;
-  flex-direction: column; /* label on top of input */
+  flex-direction: column;
   flex: 1;
 }
 
@@ -580,7 +580,7 @@ form .button input:hover {
 
 /* Add Another University button */
 .add-university-btn {
-  display: block; /* ensures it is below the section */
+  display: block;
   padding: 10px 15px;
   border: none;
   border-radius: 6px;
@@ -596,3 +596,19 @@ form .button input:hover {
   background: linear-gradient(-135deg, #71b7e6, #9b59b6);
 }
 
+/* Remove button styling */
+.remove-university-btn {
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-top: -15px;
+}
+
+.remove-university-btn:hover {
+  background: #e04344;
+}
