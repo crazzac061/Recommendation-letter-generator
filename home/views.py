@@ -903,7 +903,31 @@ def studentform2(request):
             
         qualities_info.save()
 
-        send_mail('Application for recommendation letter', f'Dear sir,\n {naam} has send application in Recommendation Letter Generator. Nearest Deadline is {uni_deadline}. Please log in to generate the letter.  \n Link: http://recommendation-generator.bct.itclub.pp.ua/  \n\nBest Regards,\nIoe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [info.professor.email], fail_silently=True)
+        # Create the email content by combining information from all universities
+        university_info = ""
+        for i in range(len(universities)):
+            if universities[i].strip():  # skip empty entries
+                university_info += (f'University: {universities[i]}\n'
+                                    f'Program Applied: {programs_applied[i]}\n'
+                                    f'Deadline: {deadlines[i]}\n\n')
+
+        # Construct the email message with the aggregated information
+        message = (f'Dear Professor,\n\n'
+                f'{naam} has submitted an application for a recommendation letter.\n\n'
+                f'Here are the details of the universities:\n\n'
+                f'{university_info}'
+                f'Please log in to generate the letter.\n'
+                f'Link: http://recommendation-generator.bct.itclub.pp.ua/\n\n'
+                'Best Regards,\nIOE Recommendation Letter Generator')
+
+        # Send the email once with all university information
+        send_mail(
+            subject='Application for recommendation letter',
+            message=message,
+            from_email='ioerecoletter@gmail.com',
+            recipient_list=[info.professor.email],
+            fail_silently=False
+        )
 
 
     return render(request, "student_success.html",{'roll':uroll, 'letter' : False, 'naam' : naam})
