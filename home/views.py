@@ -570,7 +570,7 @@ def make_letter(request):
                 "roll": roll,
                 "paper": paper,
                 "project": project,
-                "university": universities,
+                "universities": universities,
                 "quality": quality,
                 "academics": academics,
                 "teacher": teacher_name,
@@ -846,6 +846,9 @@ def studentform2(request):
         info.is_generated = False
         info.save()
 
+        # First, delete old universities for this application
+        University.objects.filter(application=info).delete()
+
         # Save all universities submitted
         for i in range(len(universities)):
             if universities[i].strip():  # avoid empty rows
@@ -855,9 +858,6 @@ def studentform2(request):
                     program_applied=programs_applied[i],
                     application=info,
                 )
-                if University.objects.filter(application = info).exists():
-                    uni = University.objects.get(application=info)
-                    uni.delete()
                 uni_info.save()
 
         academics_info = Academics(
@@ -1631,7 +1631,7 @@ def edit(request):
         application = Application.objects.get(name=stu.username, professor__unique_id=unique)
         paper = Paper.objects.get(application = application )
         project = Project.objects.get(application = application)
-        university = University.objects.get(application = application)
+        universities = University.objects.filter(application=application)
         quality = Qualities.objects.get(application = application)
         academics = Academics.objects.get(application = application)
         teacher_name = application.professor.name
@@ -1667,7 +1667,7 @@ def edit(request):
                             'firstname':firstname,
                             "paper": paper,
                             "project": project,
-                            "university": university,
+                            "universities": universities,
                             "quality": quality,
                             "academics": academics,
                             "teacher": teacher_model,
@@ -1754,7 +1754,8 @@ def renderCustom(request):
         application = Application.objects.get(name=stu.username , professor__unique_id=unique)
         paper = Paper.objects.get(application = application )
         project = Project.objects.get(application = application)
-        university = University.objects.get(application = application)
+        universities = University.objects.filter(application=application)
+        letters = []
         quality = Qualities.objects.get(application = application)
         academics = Academics.objects.get(application = application)
         teacher_model = application.professor
@@ -1785,23 +1786,36 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
             jinja_template = Template(template_obj.template)
         print("GOT TEMPLATE NAME", template_name)
         
-        rendered_letter = jinja_template.render({
-            'application':application,
-            "student": application.std,
-            'subjects': subjects,
-            'subject': subject,
-            'value': value,
-            'firstname': firstname,
-            "paper": paper,
-            "project": project,
-            "university": university,
-            "quality": quality,
-            "academics": academics,
-            "teacher": teacher_model,
-            "files": files,
-        })
+        for uni in universities:
+            rendered_letter = jinja_template.render({
+                'application': application,
+                "student": application.std,
+                'subjects': subjects,
+                'subject': subject,
+                'value': value,
+                'firstname': firstname,
+                "paper": paper,
+                "project": project,
+                "university": uni,  # use one uni at a time
+                "quality": quality,
+                "academics": academics,
+                "teacher": teacher_model,
+                "files": files,
+            })
+            letters.append({
+                "university": uni.uni_name,
+                "letter": rendered_letter
+            })
         print("Quality",quality.quality)
-        return render(request, 'test2.html', {'letter': rendered_letter, 'student': application.std, 'template_name':template_name})
+        return render(
+            request,
+            'test2.html',
+            {
+                'letters': letters,   # list of dicts
+                'student': application.std,
+                'template_name': template_name
+            }
+        )
 
 
 def template(request):
