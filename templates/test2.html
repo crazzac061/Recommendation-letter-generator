@@ -1,21 +1,30 @@
 {% extends 'base2.html' %}
 
-{% block title %}Edit Letter{% endblock title %}
+{% block title %}Edit Letters{% endblock title %}
 {% block body %}
 <div class="a4-preview">
     <div class="a4-paper">
-        <h2 style="text-align:center;">Letter of Recommendation</h2>
-        <form method="POST" action="/final">
+        <h2 style="text-align:center;">Letters of Recommendation</h2>
+
+        {% for item in letters %}
+        <h3 style="text-align:center; margin-top:20px;">
+            For {{ item.university }}
+        </h3>
+
+        <form method="POST" action="/final" style="margin-bottom:40px;">
             {% csrf_token %}
-            <div id="textbox" name="textbox" contenteditable="true" style="white-space: pre-line; font-size: 16px; min-height: 700px; outline: 1px solid #e0e0e0; border-radius: 4px; padding: 8px;">
-                {{ letter|safe }}
+            <div id="textbox{{ forloop.counter }}" name="textbox" contenteditable="true" 
+                 style="white-space: pre-line; font-size: 16px; min-height: 700px; outline: 1px solid #e0e0e0; border-radius: 4px; padding: 8px;">
+                {{ item.letter|safe }}
             </div>
-            <input type="hidden" name="roll" value="{{student.roll_number}}">
-            <textarea name="textarea1" id="textarea1" hidden></textarea>
+            <input type="hidden" name="roll" value="{{ student.roll_number }}">
+            <textarea name="textarea1" id="textarea1{{ forloop.counter }}" hidden></textarea>
             <div class="button" style="margin-top: 24px; display: flex; justify-content: center; align-items: center; width: 95%;">
-                <input type="submit" id="btn" value="Submit" onclick="Exchangevalue()" class="cta-add">
+                <input type="submit" value="Submit" onclick="Exchangevalue({{ forloop.counter }})" class="cta-add">
             </div>
         </form>
+        <hr>
+        {% endfor %}
     </div>
 </div>
 <!-- <div style="text-align:center; margin-top:30px; display: flex; justify-content: center; gap: 20px;">
@@ -41,7 +50,7 @@
     align-items: flex-start;
     min-height: 100vh;
     background: #f0f0f0;
-    padding: 40px 0 60px 0; /* Extra bottom padding for buttons */
+    padding: 40px 0 60px 0;
 }
 .a4-paper {
     width: 794px;
@@ -54,14 +63,14 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
 }
 </style>
+
 <script>
     // Ensure the edited letter is submitted
-    function Exchangevalue() {
-        var textbox = document.getElementById("textbox");
-        var textarea1 = document.getElementById("textarea1");
+    function Exchangevalue(index) {
+        var textbox = document.getElementById("textbox" + index);
+        var textarea1 = document.getElementById("textarea1" + index);
         textarea1.value = textbox.innerText;
     }
 </script>
