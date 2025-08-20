@@ -147,16 +147,9 @@ from home.forms import StudentForm
 
 import re
 
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.core.mail import send_mail
-from fpdf import FPDF
-import textwrap
 import unicodedata
 import os
-import re
-from .models import Application  # Adjust based on your actual import
-from pdf2docx import Converter
+from .models import Application
 from django.conf import settings
 
 def text_to_pdf(text, roll, name):
@@ -235,13 +228,13 @@ def final(request, *args, **kwargs):
         text_to_pdf(letters, roll, application.professor.name)
         application.is_generated = True
         application.save()
-        # send_mail(
-        #     'Recommendation Letter',
-        #     'Dear sir, \n Your letter has been generated your letter of recommendation. \n \n Best Regards, \n Ioe Recommendation Letter Generator',
-        #     'ioerecoletter@gmail.com',
-        #     [application.email],
-        #     fail_silently=True
-        # )
+        send_mail(
+            'Recommendation Letter',
+            'Dear sir, \n Your letter has been generated your letter of recommendation. \n \n Best Regards, \n Ioe Recommendation Letter Generator',
+            'ioerecoletter@gmail.com',
+            [application.email],
+            fail_silently=True
+        )
         return redirect("media/letter/" + roll + "_" + application.professor.name + ".pdf")
 
     return HttpResponse("Invalid request", status=400)
