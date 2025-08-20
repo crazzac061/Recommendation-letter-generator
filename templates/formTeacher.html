@@ -37,18 +37,6 @@
   <span class="details">Recommendation Purpose: {{ recommendation_purpose|linebreaksbr }}</span> <br />
   <br />
 
-
-  <!-- <h5>Universities Applied</h5>
-  {% for university in universities %}
-  <span class="details">University: {{university.uni_name}}</span> <br />
-  <span class="details">University Deadline: {{university.uni_deadline}}</span> <br />
-  <span class="details">Program Applied: {{university.program_applied}}</span> <br />
-  <br />
-  {% endfor %}
-  <br /> -->
-
-  <!-- Button trigger modal -->
-
 {% if files.transcript.url|lower|slice:'-4:' == '.pdf' %}
   <!-- Display PDF in new tab -->
   <a href="{{ files.transcript.url }}" class="btn btn-primary" ata-bs-toggle="modal" data-bs-target="#exampleModal1" target="_blank">
