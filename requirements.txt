@@ -7,6 +7,9 @@ defusedxml==0.7.1
 dj-database-url==2.3.0
 Django==5.1.7
 fire==0.6.0
+weasyprint==66.0
+fpdf2==2.8.4
+
 fonttools==4.53.1
 fpdf==1.7.2
 fpdf2==2.8.4

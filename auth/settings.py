@@ -175,3 +175,4 @@ EMAIL_HOST_PASSWORD = "nxdrmhpnsahduvax"
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 X_FRAME_OPTIONS = 'ALLOWALL'
+SECURE_SSL_REDIRECT = False
