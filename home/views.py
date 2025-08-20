@@ -145,19 +145,30 @@ from io import BytesIO as bio
 #import fs
 from home.forms import StudentForm
 
-def text_to_pdf(text,roll, name):
+import re
+
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.core.mail import send_mail
+from fpdf import FPDF
+import textwrap
+import unicodedata
+import os
+import re
+from .models import Application  # Adjust based on your actual import
+from pdf2docx import Converter
+from django.conf import settings
+
+def text_to_pdf(text, roll, name):
     a4_width_mm = 270
     pt_to_mm = 0.35
     fontsize_pt = 11
     fontsize_mm = fontsize_pt * pt_to_mm
     margin_bottom_mm = 10
     character_width_mm = 7 * pt_to_mm
-    width_text = (a4_width_mm / 1*character_width_mm)
-
-    import unicodedata
+    width_text = (a4_width_mm / 1 * character_width_mm)
 
     def normalize_text(text: str) -> str:
-        # Replace “fancy” punctuation with ASCII equivalents
         replacements = {
             "’": "'",
             "‘": "'",
@@ -173,87 +184,67 @@ def text_to_pdf(text,roll, name):
         }
         for bad, good in replacements.items():
             text = text.replace(bad, good)
-
-    # Normalize to remove accents (é -> e, ü -> u, etc.)
         return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
-    
-    text = normalize_text(text)
 
     pdf = FPDF(orientation="P", unit="mm", format="Letter")
     pdf.set_auto_page_break(True, margin=margin_bottom_mm)
-    pdf.add_page()
-    
-    pdf.set_font("Arial", 'B', size=fontsize_pt*1.2)
-    pdf.cell(0, 10,"Letter of Recommendation ",align='C')
-    pdf.set_y(15)
-    pdf.set_font(family="Arial", size=fontsize_pt)
-    
-    splitted = text.split("\n")
-    a=0
-    for line in splitted:
-        lines = textwrap.wrap(line, width_text*1.2)
 
-        if a==0:
-            if len(lines) == 0:
+    # Split letters by delimiter using regex to handle newline variations
+    letters = [letter.strip() for letter in re.split(r'\n\s*---\s*\n', text.strip()) if letter.strip()]
+    # print("Split letters:", letters)  # Debug print to verify split
+
+    for letter_content in letters:
+        pdf.add_page()
+        letter_content = normalize_text(letter_content)
+        
+        pdf.set_font("Arial", 'B', size=fontsize_pt * 1.2)
+        pdf.cell(0, 10, "Letter of Recommendation", align='C')
+        pdf.set_y(25)
+        pdf.set_font(family="Arial", size=fontsize_pt)
+        
+        # Split the letter into lines and process each
+        for line in letter_content.split("\n"):
+            if not line.strip():  # Skip empty lines
                 pdf.ln()
-                a=a+1
                 continue
-        else:
-            if len(lines) == 0:
-                continue
-      
-         
+            # Wrap long lines to fit page width
+            lines = textwrap.wrap(line.strip(), width_text * 1.2)
+            for wrap in lines:
+                pdf.set_right_margin(25)
+                pdf.set_x(25)
+                pdf.multi_cell(0, fontsize_mm * 1.5, wrap)
 
-        for wrap in lines:
-            pdf.set_right_margin(25)
-
-            pdf.set_x(25)
-            pdf.multi_cell(0, fontsize_mm*1.5, wrap)
-            a=a-1
-           
-
-
-
-    pdf.output("media/letter/"+roll+'_'+name+".pdf", "F")
+    pdf.output("media/letter/" + roll + '_' + name + ".pdf", "F")
     print("pdf generated")
 
-    # docx_path = os.path.join(settings.MEDIA_ROOT, "letter", f"{roll}_{name}.docx")
-    cv = Converter("media/letter/"+roll+'_'+name+".pdf")
-    cv.convert("media/docs/" + roll + "_"+name + ".docx", start=0, end=None)
+    cv = Converter("media/letter/" + roll + '_' + name + ".pdf")
+    cv.convert("media/docs/" + roll + "_" + name + ".docx", start=0, end=None)
     print("docx generated")
     cv.close()
 
-    # Return download link for the DOCX file
-
-
-
-
-import re
-
-### xhtml2pdf
+@login_required
 def final(request, *args, **kwargs):
     if request.method == "POST":
-        textarea1 = request.POST.get("textarea1")
+        letters = request.POST.get("letters")
         roll = request.POST.get("roll")
         unique = request.COOKIES.get('unique')
         application = Application.objects.get(std__roll_number=roll, professor__unique_id=unique)
-        
 
-        print("TEXT:\n",textarea1)
+        print("LETTERS:\n", letters)
 
-        # textarea2 = request.POST.get("textarea2")
-        # textarea3 = request.POST.get("textarea3")
-        letter=f'''
-                \n{textarea1}
-        '''
-        print("inside final")
-        print(textarea1)
-        text_to_pdf(letter,roll, application.professor.name)
+        text_to_pdf(letters, roll, application.professor.name)
         application.is_generated = True
-        application.save() 
-        # messages.error(request, "Sorry!  The Credentials doesn't match.")
-        send_mail('Recommendation Letter', 'Dear sir, \n Your letter has been generated your letter of recommendation. \n \n Best Regards, \n Ioe Recommendation Letter Generator', 'ioerecoletter@gmail.com', [application.email], fail_silently=True)
-        return redirect("media/letter/"+roll+"_"+ application.professor.name +".pdf")
+        application.save()
+        # send_mail(
+        #     'Recommendation Letter',
+        #     'Dear sir, \n Your letter has been generated your letter of recommendation. \n \n Best Regards, \n Ioe Recommendation Letter Generator',
+        #     'ioerecoletter@gmail.com',
+        #     [application.email],
+        #     fail_silently=True
+        # )
+        return redirect("media/letter/" + roll + "_" + application.professor.name + ".pdf")
+
+    return HttpResponse("Invalid request", status=400)
 
 def studentfinal(request, *args, **kwargs):
     if request.method == "POST":
