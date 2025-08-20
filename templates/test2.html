@@ -3,51 +3,29 @@
 {% block title %}Edit Letters{% endblock title %}
 {% block body %}
 <div class="a4-preview">
-    <div class="a4-paper">
-        <h2 style="text-align:center;">Letters of Recommendation</h2>
-
+    <form method="POST" action="/final" style="margin-bottom:40px;">
+        {% csrf_token %}
         {% for item in letters %}
-        <h3 style="text-align:center; margin-top:20px;">
-            For {{ item.university }}
-        </h3>
-
-        <form method="POST" action="/final" style="margin-bottom:40px;">
-            {% csrf_token %}
+        <div class="a4-paper">
+            <h2 style="text-align:center;">Letter of Recommendation</h2>
             <div id="textbox{{ forloop.counter }}" name="textbox" contenteditable="true" 
                  style="white-space: pre-line; font-size: 16px; min-height: 700px; outline: 1px solid #e0e0e0; border-radius: 4px; padding: 8px;">
                 {{ item.letter|safe }}
             </div>
-            <input type="hidden" name="roll" value="{{ student.roll_number }}">
-            <textarea name="textarea1" id="textarea1{{ forloop.counter }}" hidden></textarea>
-            <div class="button" style="margin-top: 24px; display: flex; justify-content: center; align-items: center; width: 95%;">
-                <input type="submit" value="Submit" onclick="Exchangevalue({{ forloop.counter }})" class="cta-add">
-            </div>
-        </form>
-        <hr>
+        </div>
         {% endfor %}
-    </div>
-</div>
-<!-- <div style="text-align:center; margin-top:30px; display: flex; justify-content: center; gap: 20px;">
-    <form method="post" action="/download_letter/" style="display:inline;">
-        {% csrf_token %}
-        <input type="hidden" name="roll" value="{{student.roll_number}}">
-        <input type="hidden" name="format" value="pdf">
-        <input type="hidden" name="template_name" value="{{ template_name|default:'Default' }}">
-        <button type="submit" class="cta-add">Download as PDF</button>
+        <input type="hidden" name="roll" value="{{ student.roll_number }}">
+        <textarea name="letters" id="letters" hidden></textarea>
+        <div class="button" style="margin-top: 24px; display: flex; justify-content: center; align-items: center; width: 95%;">
+            <input type="submit" value="Submit" onclick="collectLetters()" class="cta-add">
+        </div>
     </form>
-    <form method="post" action="/download_letter/" style="display:inline;">
-        {% csrf_token %}
-        <input type="hidden" name="roll" value="{{student.roll_number}}">
-        <input type="hidden" name="format" value="docx">
-        <input type="hidden" name="template_name" value="{{ template_name|default:'Default' }}">
-        <button type="submit" class="cta-add">Download as DOCX</button>
-    </form> -->
 </div>
 <style>
 .a4-preview {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
     min-height: 100vh;
     background: #f0f0f0;
     padding: 40px 0 60px 0;
@@ -58,7 +36,7 @@
     background: #fff;
     box-shadow: 0 0 10px rgba(0,0,0,0.15);
     padding: 48px 60px;
-    margin: 0 auto;
+    margin: 20px auto;
     border-radius: 4px;
     position: relative;
     display: flex;
@@ -67,11 +45,13 @@
 </style>
 
 <script>
-    // Ensure the edited letter is submitted
-    function Exchangevalue(index) {
-        var textbox = document.getElementById("textbox" + index);
-        var textarea1 = document.getElementById("textarea1" + index);
-        textarea1.value = textbox.innerText;
+    function collectLetters() {
+        var letters = [];
+        {% for item in letters %}
+            var textbox = document.getElementById("textbox{{ forloop.counter }}");
+            letters.push(textbox.innerText);
+        {% endfor %}
+        document.getElementById("letters").value = letters.join('\n\n---\n\n');
     }
 </script>
 {% endblock body %}
