@@ -38,7 +38,7 @@ Good Luck!
             {% endif %}
 
             <p>
-              <br>I would like to {{ quality.recommend }} recommend <b>{{ application.name }}</b> for admission to the graduate program at your
+              <br>I would like to {{ quality.recommend }} recommend <b>{{ application.name }}</b> for admission to the <b>{{ university.program_applied}}</b> program at <b>{{ university.uni_name}}</b>
               university.  
               I have known {{ firstname }} for about {{ application.years_taught }} now as an undergraduate student
               in {{ student.program }} Engineering.
@@ -126,7 +126,7 @@ Good Luck!
 
 
             <p><br>I am quite confident that {{ firstname }}’s skills coupled with academic capability will make {{ obj }} a
-              good candidate for your university. Thus, I would highly recommend {{ obj }} for the graduate program at your esteemed
+              good candidate for your university. Thus, I would highly recommend {{ obj }} for the <b>{{ university.program_applied}}</b> program at your esteemed
               university. Please feel free to contact me if further enquiry is required.
             </p>
 
