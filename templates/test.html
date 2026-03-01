@@ -18,6 +18,7 @@
                     university.
                     I have known {{firstname}} for about {{student.years_taught}} now as an undergraduate student
                     in {{student.std.program}} Engineering.
+                    {% if student.relationship_type %}I have known {{firstname}} as {{ student.relationship_type }}.{% endif %}
                     {%if student.is_pro == 'Yes'%}
                         Moreover, I was the supervisor for his final year project.
                     {%endif%}
@@ -41,7 +42,7 @@
                     In fact, he was the topper of his batch in {{student.std.program}} Engineering.
                     {% else %}
                     He maintained excellent academic performance throughout his undergraduate
-                    ranking among the {{academics.tentative_ranking}} students of his batch.
+                    ranking among the {{academics.tentative_ranking}} students of his batch{% if student.class_size %} (class size {{student.class_size}}){% endif %}{% if student.ranking_percentile %}, roughly {{student.ranking_percentile}} percentile{% endif %}.
                     {% endif %}
                     As an instructor and his supervisor
                     too I had enough opportunity is observe his capabilities closely.</p>
@@ -93,6 +94,8 @@
                     Besides academics, he was also involved in several extra-curricular activities .
                     He participated in various competitions organized in and off the campus.
                     {%endif%}
+                    {% if student.scholarships %}He has received scholarships/awards: {{student.scholarships}}.<br>{% endif %}
+                    {% if student.competitions_won %}Competitions won: {{student.competitions_won}}.<br>{% endif %}
                     {%if project.deployed%}
                     Unlike, most students who limit their project to an
                     academic exercise, he actually deployed his project publicly in our server and maintained it.
@@ -104,6 +107,9 @@
             
                 </p>
 
+                {% if student.prof_anecdote %}
+                <p><br>{{ student.prof_anecdote }}</p>
+                {% endif %}
                 <p><br>I am quite confident that {{firstname}}'s skills coupled with academic capability will make him a
                     good candidate for
                     your university. Thus, I would highly recommend him for the graduate program at your esteemed

@@ -530,6 +530,7 @@ def make_letter(request):
         files = Files.objects.get(application=appli)
 
         templates = CustomTemplates.objects.filter(professor = appli.professor)
+        default_template = templates.filter(is_default=True).first()
 
         teacher_name = appli.professor.name
 
@@ -550,6 +551,7 @@ def make_letter(request):
                 "teacher_model": teacher_model,
                 "files": files, 
                 'templates': templates,
+                'default_template': default_template,
                 'linkedin': linkedin,  
                 'personal_statement': personal_statement, 
                 'recommendation_purpose': recommendation_purpose              
@@ -565,6 +567,7 @@ def studentform1(request):
         uemail = request.POST.get("email")
         uprof = request.POST.get("prof")
         known_year = request.POST.get("yrs")
+        relationship_type = request.POST.get("relationship_type")
         
         s_project = request.POST.get("sproject")
         is_project = request.POST.get("is_project")
@@ -577,6 +580,15 @@ def studentform1(request):
         linkedIn_link = request.POST.get("linkedIn")
         pstatement = request.POST.get('personal_statement')
         rpurpose = request.POST.get('recommendation_purpose')
+        intern_company = request.POST.get("intern_company")
+        intern_role = request.POST.get("intern_role")
+        intern_duration = request.POST.get("intern_duration")
+        intern_outcome = request.POST.get("intern_outcome")
+        scholarships = request.POST.get("scholarships")
+        competitions_won = request.POST.get("competitions_won")
+        class_size = request.POST.get("class_size")
+        ranking_percentile = request.POST.get("ranking_percentile")
+        language_instruction = request.POST.get("language_instruction")
         
 
         
@@ -609,6 +621,19 @@ def studentform1(request):
                     subjects=listToStr,
                     is_paper = has_paper,
                     intern = True if intern == "on" else False,
+                    personal_statement = pstatement,
+                    recommendation_purpose = rpurpose,
+                    linkedIn = linkedIn_link,
+                    relationship_type = relationship_type,
+                    intern_company = intern_company,
+                    intern_role = intern_role,
+                    intern_duration = intern_duration,
+                    intern_outcome = intern_outcome,
+                    scholarships = scholarships,
+                    competitions_won = competitions_won,
+                    class_size = class_size if class_size else None,
+                    ranking_percentile = ranking_percentile,
+                    language_instruction = language_instruction,
                 )
                 
                 if Application.objects.filter(std__username = naam ,professor__name = prof.name ).exists():
@@ -625,18 +650,25 @@ def studentform1(request):
                     info.personal_statement = pstatement 
                     info.recommendation_purpose = rpurpose
                     info.linkedIn = linkedIn_link
-                    info.save() 
-                    
-                else:
+                    info.intern_company = intern_company
+                    info.intern_role = intern_role
+                    info.intern_duration = intern_duration
+                    info.intern_outcome = intern_outcome
+                    info.scholarships = scholarships
+                    info.competitions_won = competitions_won
+                    info.class_size = class_size if class_size else None
+                    info.ranking_percentile = ranking_percentile
+                    info.language_instruction = language_instruction
+                    info.relationship_type = relationship_type
                     info.save()
-
+                
+                # ensure project_info variable exists before we try to save
                 project_info = Project(
                     supervised_project = s_project,
                     final_project = pro1,
                     deployed = True if deployed == "on" else False,
                     application = info,
                 )
-                
                 if Project.objects.filter(application = info).exists():
                     project = Project.objects.get(application=info)
                     project.delete()
@@ -964,7 +996,13 @@ def loginTeacher(request):
                 unique = x[-1]
                 print(x)
                 print(f'Unique id {unique}')
-                teacher_model = TeacherInfo.objects.get(unique_id=unique)
+                # teacher_model = TeacherInfo.objects.get(unique_id=unique)
+                try:
+                     teacher_model = TeacherInfo.objects.get(unique_id=unique)
+                except TeacherInfo.DoesNotExist:
+                    messages.error(request, f"No teacher found for ID: {unique}")
+                    return render(request, "loginTeacher.html")  
+
                 generated_dataharu = Application.objects.filter(professor__unique_id=unique , is_generated=True)
                 dataharu = Application.objects.filter(professor__unique_id=unique)
                 number = len(dataharu)
@@ -1539,8 +1577,13 @@ def edit(request):
         friendly = request.POST.get('quality5')
 
         recommend = request.POST.get('recommend')
+        prof_anecdote = request.POST.get('prof_anecdote')
 
         info = Application.objects.get(std__roll_number=roll, professor__unique_id=unique)
+        # persist professor anecdote if provided
+        if prof_anecdote is not None:
+            info.prof_anecdote = prof_anecdote
+            info.save()
 
 
         # qualities_info = Qualities(
@@ -1679,8 +1722,13 @@ def renderCustom(request):
         teamwork = request.POST.get('quality4')
         friendly = request.POST.get('quality5')
         recommend = request.POST.get('recommend')
+        prof_anecdote = request.POST.get('prof_anecdote')
         template_name = request.POST.get('temp')
         info = Application.objects.get(professor__unique_id=unique , std__roll_number=roll)
+        # record anecdote if given
+        if prof_anecdote is not None:
+            info.prof_anecdote = prof_anecdote
+            info.save()
         Qualities.objects.filter(application = info).update(
             leadership = True if leaders == "on" else False,
             hardworking = True if hardwork == "on" else False,
@@ -1713,13 +1761,51 @@ def renderCustom(request):
         template_obj = None
         if template_name and template_name != 'default':
             template_obj = CustomTemplates.objects.filter(template_name=template_name, professor=teacher_model).first()
+        # if no explicit template or the special 'default' option was requested, prefer the template marked
+        # as is_default by this professor (allows custom default templates with arbitrary names)
         if not template_obj:
-            # Try to get a "Default" template for this professor
+            template_obj = CustomTemplates.objects.filter(professor=teacher_model, is_default=True).first()
+        # still nothing? fall back to any template literally named "Default" for compatibility
+        if not template_obj:
             template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
         if not template_obj:
             # Fallback to a hardcoded default template
             default_template_content = """
-To Whom It May Concern,\n\nI am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.\n\n{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.\n\n{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class.{% endif %}\n\n{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled \"{{ project.supervised_project }}\".{% endif %}\n\n{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper \"{{ paper.paper_title }}\".{% endif %}\n\n{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}\n\n{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}\n\n{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}\n\nIf you require any further information, please feel free to contact me at {{ teacher.email }}.\n\nSincerely,\n{{ teacher.name }}\n{{ teacher.title }}\nIOE Pulchowk Campus\n"""
+To Whom It May Concern,
+
+I am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.
+{% if student.relationship_type %}I have known {{ student.name }} as {{ student.relationship_type }}.{% endif %}
+
+{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.
+
+{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class{% if student.class_size %} (class size {{ student.class_size }}){% endif %}{% if student.ranking_percentile %}, approximately {{ student.ranking_percentile }} percentile{% endif %}.{% endif %}
+
+{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled "{{ project.supervised_project }}"{% if project.final_project %}, and also worked on "{{ project.final_project }}"{% endif %}.{% endif %}
+
+{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper "{{ paper.paper_title }}"{% if paper.paper_link %} ({{ paper.paper_link }}){% endif %}.{% endif %}
+
+{% if student.linkedIn %}You may review the student's background via LinkedIn: {{ student.linkedIn }}.{% endif %}
+
+{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}
+
+{% if student.intern %}{% if student.intern_company %}{{ student.name }} completed an internship at {{ student.intern_company }}{% if student.intern_role %} as {{ student.intern_role }}{% endif %}{% if student.intern_duration %} for {{ student.intern_duration }}{% endif %}{% if student.intern_outcome %}, where {{ student.intern_outcome }}{% endif %}.{% endif %}{% endif %}
+
+{% if student.scholarships %}Scholarships/awards: {{ student.scholarships }}.{% endif %}
+{% if student.competitions_won %}Competitions won: {{ student.competitions_won }}.{% endif %}
+
+{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}
+
+{% if student.prof_anecdote %}{{ student.prof_anecdote }}{% endif %}
+
+{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}
+
+If you require any further information, please feel free to contact me at {{ teacher.email }}.
+
+Sincerely,
+{{ teacher.name }}
+{{ teacher.title }}
+IOE Pulchowk Campus
+"""
             jinja_template = Template(default_template_content)
         else:
             jinja_template = Template(template_obj.template)
@@ -1742,36 +1828,53 @@ To Whom It May Concern,\n\nI am delighted to write this letter of recommendation
 
 def template(request):
     if request.method == "GET":
-        
         unique = request.COOKIES.get("unique")
         teacher = TeacherInfo.objects.get(unique_id=unique)
+        # fetch all templates for this professor so they can see and edit them
+        templates = CustomTemplates.objects.filter(professor=teacher)
 
-        return render(request, "customTemplate.html", {'professor':teacher})
+        return render(request, "customTemplate.html", {'professor': teacher, 'templates': templates})
     
 def getTemplate(request):
     if request.method == "POST":
         content = request.POST.get("content")
         uid = request.POST.get("uid")
         name = request.POST.get("templateName")
+        make_default = request.POST.get("is_default") == 'on'
+        # legacy: if template is named "Default" treat as default
+        if name and name.strip().lower() == 'default':
+            make_default = True
         teacher = TeacherInfo.objects.get(unique_id= uid)
-        print(content)
+
+        # cleanup editor artifacts
         content = content.replace('<p>&nbsp;</p>\n<p>&nbsp;</p>', '')
         content = content.replace('<p>&nbsp;</p>', '')
-
-        # Replace various types of new lines between paragraphs with <br> tags
         content = content.replace('</p>\n<p>', '<br>')
         content = content.replace('</p>\r\n<p>', '<br>')
         content = content.replace('</p>\r<p>', '<br>')
-
-        # Ensure every paragraph starts with <br>
         content = content.replace('<p>', '<p><br>')
 
-        print(content)
+        # if requested as default, clear previous defaults for this prof
+        if make_default:
+            CustomTemplates.objects.filter(professor=teacher, is_default=True).update(is_default=False)
 
-        template = CustomTemplates(template_name =  name, template=content, professor = teacher)
-        template.save()
+        # try to update existing template with same name
+        template_obj = CustomTemplates.objects.filter(template_name=name, professor=teacher).first()
+        if template_obj:
+            template_obj.template = content
+            if make_default:
+                template_obj.is_default = True
+            template_obj.save()
+        else:
+            template_obj = CustomTemplates.objects.create(
+                template_name=name,
+                template=content,
+                professor=teacher,
+                is_default=make_default,
+            )
 
-        return render(request, "customTemplate.html", {'template':template})
+        templates = CustomTemplates.objects.filter(professor=teacher)
+        return render(request, "customTemplate.html", {'professor': teacher, 'templates': templates, 'template': template_obj})
     
 
 def admin_login(request):
@@ -1920,10 +2023,47 @@ def download_letter(request):
         length = len(subjec)
         value = True if length == 1 else False
         # Template selection logic (reuse from renderCustom)
-        template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
+        # prefer the template marked as default first
+        template_obj = CustomTemplates.objects.filter(professor=teacher_model, is_default=True).first()
+        if not template_obj:
+            template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
         if not template_obj:
             default_template_content = """
-To Whom It May Concern,\n\nI am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.\n\n{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.\n\n{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class.{% endif %}\n\n{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled \"{{ project.supervised_project }}\".{% endif %}\n\n{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper \"{{ paper.paper_title }}\".{% endif %}\n\n{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}\n\n{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}\n\n{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}\n\nIf you require any further information, please feel free to contact me at {{ teacher.email }}.\n\nSincerely,\n{{ teacher.name }}\n{{ teacher.title }}\nIOE Pulchowk Campus\n"""
+To Whom It May Concern,
+
+I am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.
+{% if student.relationship_type %}I have known {{ student.name }} as {{ student.relationship_type }}.{% endif %}
+
+{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.
+
+{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class{% if student.class_size %} (class size {{ student.class_size }}){% endif %}{% if student.ranking_percentile %}, approximately {{ student.ranking_percentile }} percentile{% endif %}.{% endif %}
+
+{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled "{{ project.supervised_project }}"{% if project.final_project %}, and also worked on "{{ project.final_project }}"{% endif %}.{% endif %}
+
+{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper "{{ paper.paper_title }}"{% if paper.paper_link %} ({{ paper.paper_link }}){% endif %}.{% endif %}
+
+{% if student.linkedIn %}You may review the student's background via LinkedIn: {{ student.linkedIn }}.{% endif %}
+
+{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}
+
+{% if student.intern %}{% if student.intern_company %}{{ student.name }} completed an internship at {{ student.intern_company }}{% if student.intern_role %} as {{ student.intern_role }}{% endif %}{% if student.intern_duration %} for {{ student.intern_duration }}{% endif %}{% if student.intern_outcome %}, where {{ student.intern_outcome }}{% endif %}.{% endif %}{% endif %}
+
+{% if student.scholarships %}Scholarships/awards: {{ student.scholarships }}.{% endif %}
+{% if student.competitions_won %}Competitions won: {{ student.competitions_won }}.{% endif %}
+
+{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}
+
+{% if student.prof_anecdote %}{{ student.prof_anecdote }}{% endif %}
+
+{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}
+
+If you require any further information, please feel free to contact me at {{ teacher.email }}.
+
+Sincerely,
+{{ teacher.name }}
+{{ teacher.title }}
+IOE Pulchowk Campus
+"""
             jinja_template = Template(default_template_content)
         else:
             jinja_template = Template(template_obj.template)
@@ -1996,8 +2136,77 @@ def registerProfessor(request):
 
 def add_default_template_to_all_professors():
     from home.models import TeacherInfo, CustomTemplates
-    default_template_content = """
-To Whom It May Concern,\n\nI am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.\n\n{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.\n\n{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class.{% endif %}\n\n{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled \"{{ project.supervised_project }}\".{% endif %}\n\n{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper \"{{ paper.paper_title }}\".{% endif %}\n\n{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}\n\n{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}\n\n{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}\n\nIf you require any further information, please feel free to contact me at {{ teacher.email }}.\n\nSincerely,\n{{ teacher.name }}\n{{ teacher.title }}\nIOE Pulchowk Campus\n"""
+    default_template_content = """<!DOCTYPE html>
+<html>
+<head>
+    <title>Letter of Recommendation</title>
+</head>
+<body>
+
+<p>{{ today }}</p>
+
+<p>To Whom It May Concern,</p>
+
+<p>
+I am writing to recommend {{ student.username }} from the {{ student.department }} department, currently enrolled in the {{ student.program }} program. I have taught {{ firstname }} for {{ application.years_taught }} year{% if application.years_taught|add:0 > 1 %}s{% endif %} in {% if value %}subjects such as {% for subject in subjects %}{{ subject }}{% if not forloop.last %}, {% endif %}{% endfor %}.{% else %}the subject {{ subjects.0 }}.{% endif %}
+</p>
+
+<p>
+During this period, {% if student.gender == "Male" %}he{% elif student.gender == "Female" %}she{% else %}they{% endif %} consistently demonstrated academic diligence, maintaining a GPA of {{ academics.gpa }} and ranking in the {{ academics.tentative_ranking }} of the class.
+</p>
+
+{% if application.is_pro == "yes" or project.supervised_project %}
+<p>
+I also had the opportunity to supervise a project titled "<strong>{{ project.supervised_project }}</strong>", which reflected a strong grasp of technical concepts and problem-solving. {% if project.final_project %}In the final year, the capstone project, "<strong>{{ project.final_project }}</strong>", further showcased {% if student.gender == "Male" %}his{% elif student.gender == "Female" %}her{% else %}their{% endif %} initiative and innovation.{% endif %} {% if project.deployed %}Notably, the project was successfully deployed, indicating practical applicability and a user-focused design.{% endif %}
+</p>
+{% endif %}
+
+{% if application.is_paper == "yes" and paper.paper_title %}
+<p>
+In addition to coursework, {% if student.gender == "Male" %}he{% elif student.gender == "Female" %}she{% else %}they{% endif %} co-authored a research paper titled "<strong>{{ paper.paper_title }}</strong>", available at <a href="{{ paper.paper_link }}">{{ paper.paper_link }}</a>. This work demonstrated a clear ability to conduct thorough research and communicate findings effectively.
+</p>
+{% endif %}
+
+{% if application.intern %}
+<p>
+Furthermore, an internship experience has contributed to a practical understanding of the industry, adding to {% if student.gender == "Male" %}his{% elif student.gender == "Female" %}her{% else %}their{% endif %} technical and collaborative skill set.
+</p>
+{% endif %}
+
+{% if quality.quality or quality.extracirricular %}
+<p>
+{% if student.gender == "Male" %}He{% elif student.gender == "Female" %}She{% else %}They{% endif %} exhibits {% if quality.hardworking %}a strong work ethic{% endif %}{% if quality.leadership %}, leadership potential{% endif %}{% if quality.teamwork %}, team collaboration{% endif %}{% if quality.social %}, and interpersonal skills{% endif %}. {% if quality.presentation %}Presentation skills are particularly noteworthy.{% endif %} {% if quality.friendly %}Peers find {% if student.gender == "Male" %}him{% elif student.gender == "Female" %}her{% else %}them{% endif %} approachable and easy to work with.{% endif %} {% if quality.extracirricular %}Engagement in extracurriculars adds to a well-rounded profile.{% endif %}
+</p>
+{% endif %}
+
+{% if application.personal_statement %}
+<p>
+Regarding future goals, {% if student.gender == "Male" %}he{% elif student.gender == "Female" %}she{% else %}they{% endif %} shared the following personal motivation for applying:
+</p>
+<blockquote><em>{{ application.personal_statement }}</em></blockquote>
+{% endif %}
+
+<p>
+Given the performance and personal qualities observed, I believe {% if student.gender == "Male" %}he{% elif student.gender == "Female" %}she{% else %}they{% endif %} is well-suited for the {{ university.program_applied }} program at {{ university.uni_name }}.
+</p>
+
+{% if quality.recommend %}
+<p>
+I strongly recommend this applicant and am confident {% if student.gender == "Male" %}he{% elif student.gender == "Female" %}she{% else %}they{% endif %} will thrive in any rigorous academic or research environment.
+</p>
+{% endif %}
+
+<p>Sincerely,</p>
+<p>
+<strong>{{ teacher.name }}</strong><br>
+{{ teacher.title }}<br>
+Department of {{ teacher.department }}<br>
+Email: {{ teacher.email }}<br>
+Phone: {{ teacher.phone }}
+</p>
+
+</body>
+</html>"""
     for prof in TeacherInfo.objects.all():
         if not CustomTemplates.objects.filter(professor=prof, template_name__iexact='Default').exists():
             CustomTemplates.objects.create(

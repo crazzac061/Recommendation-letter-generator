@@ -29,9 +29,15 @@
     <h1>Letter of Recommendation</h1>
     
     <p>I would like to recommend <b>{{student.name}}</b> for admission to the graduate program at your university.
+        {% if student.relationship_type %}I have known {{student.name}} as {{student.relationship_type}}.{% endif %}
         I have known {{student.name}} for about {{student.years_taught}} now as an undergraduate student
         in {{student.std.program}} engineering. I have taught him courses on <student.courses>.
         Moreover, I was the supervisor for his final year project. I taught him {{student.subjects}} </p>
+    {% if student.class_size or student.ranking_percentile or student.language_instruction %}
+    <p>
+        {% if student.class_size %}The class consisted of approximately {{student.class_size}} students{% endif %}{% if student.ranking_percentile %}, and {{student.name}} ranked around the {{student.ranking_percentile}} percentile{% endif %}{% if student.language_instruction %}. The instruction language was {{student.language_instruction }}{% endif %}.
+    </p>
+    {% endif %}
 
 
 
@@ -39,6 +45,20 @@
         He maintained excellent academic performance throughout his undergraduate 
         ranking among the top <percent> students of his batch. As an instructor and his supervisor
         too I had enough opportunity is observe his capabilities closely.</p>
+
+    {% if student.intern %}
+    <p>
+        {% if student.intern_company %}{{student.name}} completed an internship at {{student.intern_company}}{% endif %}{% if student.intern_role %} as {{student.intern_role}}{% endif %}{% if student.intern_duration %} for {{student.intern_duration}}{% endif %}.{% if student.intern_outcome %} During this period, {{student.intern_outcome}}.{% endif %}
+    </p>
+    {% endif %}
+    {% if student.scholarships or student.competitions_won %}
+    <p>
+        {% if student.scholarships %}Awards and scholarships include: {{student.scholarships}}.{% endif %}{% if student.competitions_won %} Competitions won: {{student.competitions_won}}.{% endif %}
+    </p>
+    {% endif %}
+    {% if student.prof_anecdote %}
+    <p>{{ student.prof_anecdote }}</p>
+    {% endif %}
 
     <p>I was the supervisor in his project titled <student/project_title> . I was
         quite impressed by his hardworking nature and learning capability.I could observe his keen interest 

@@ -11,6 +11,7 @@
         border-color = "black"         
         alt="Avatar">
   <span class="details">You've known this student for: {{student.years_taught}}</span> <br />
+  {% if student.relationship_type %}<span class="details">Relationship: {{student.relationship_type}}</span> <br />{% endif %}
   <span class="details">You've taught: {{student.subjects}}</span> <br />
 
   <span class="details">GPA: {{academics.gpa}}</span> <br />
@@ -250,6 +251,11 @@
           </select>
         </div>
 
+        <div class="input-box">
+          <span class="details">Professor Anecdote</span>
+          <textarea name="prof_anecdote" rows="4" placeholder="Enter any specific observation or story"></textarea>
+        </div>
+
         <div class="gender-details">
           <span class="gender-title">Personal Qualities</span>
           <div class="form-check">
@@ -287,9 +293,9 @@
         <div class="input-box">
           <span class="details">Choose Template</span>
            <select name="temp" id="template" required>
-            <option value = 'default'>Default</option>
+            <option value="default" {% if not default_template %}selected{% endif %}>Default</option>
              {% for template in templates %}
-             <option value="{{template.template_name}}">{{template.template_name}}</option>
+             <option value="{{template.template_name}}" {% if default_template and template.pk == default_template.pk %}selected{% endif %}>{{template.template_name}}</option>
              {% endfor %}
 
              <!-- <option value = "default" >Default</option> Default Template -->

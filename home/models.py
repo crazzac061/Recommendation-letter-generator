@@ -52,9 +52,11 @@ class TeacherInfo(models.Model):
     unique_id = models.CharField(max_length=10, null=True)
     name = models.CharField(max_length=40,null=True,blank=True)
     title = models.CharField(max_length=30,null=True,blank=True)
+    designation = models.CharField(max_length=50, blank=True, null=True)
     phone = models.CharField(max_length=15,null=True,blank=True)
     email = models.EmailField()
     department = models.ForeignKey(Department,on_delete=CASCADE)
+    office_address = models.CharField(max_length=200, blank=True, null=True)
     images = models.ImageField(upload_to='images/', blank=True, default="cute_baby.gif")
     subjects = models.ManyToManyField(Subject)
 
@@ -80,6 +82,24 @@ class Application(models.Model):
     personal_statement = models.CharField(max_length=500,null=True,blank=True)
     recommendation_purpose = models.CharField(max_length=500,null=True,blank=True)
     linkedIn = models.CharField(max_length=200,null=True,blank=True)
+
+    # relationship and ranking context
+    relationship_type = models.CharField(max_length=50,null=True,blank=True)
+    class_size = models.IntegerField(null=True,blank=True)
+    ranking_percentile = models.CharField(max_length=20,null=True,blank=True)
+    language_instruction = models.CharField(max_length=50,null=True,blank=True)
+
+    # internship details
+    intern_company = models.CharField(max_length=200,null=True,blank=True)
+    intern_role = models.CharField(max_length=100,null=True,blank=True)
+    intern_duration = models.CharField(max_length=50,null=True,blank=True)
+    intern_outcome = models.CharField(max_length=200,null=True,blank=True)
+
+    # awards/honors
+    scholarships = models.TextField(null=True,blank=True)
+    competitions_won = models.TextField(null=True,blank=True)
+
+    prof_anecdote = models.TextField(null=True,blank=True)  # could be filled later by professor
     
 
 
@@ -141,6 +161,17 @@ class Qualities(models.Model):
     extracirricular= models.CharField(max_length=500,null=True,blank=True)
 
     recommend = models.CharField(max_length=50,null=True,blank=True)
+    recommendation_strength = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        choices=[
+            ('top5','Top 5%'),
+            ('top10','Top 10%'),
+            ('outstanding','Outstanding'),
+            ('strong','Strong')
+        ]
+    )
 
     def __str__(self):
         return str(self.application) + " Qualities"

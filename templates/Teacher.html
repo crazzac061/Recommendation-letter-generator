@@ -72,8 +72,14 @@
 
 <!-- Create Template Button -->
 <div class="container-fluid mt-4">
-  <h2>Create Template:</h2>
-  <a href="/makeTemplate" class="btn btn-primary">Create Template</a>
+  {% comment %} display current default template if exists {% endcomment %}
+  {% with default=teacher_model.customtemplates_set.filter(is_default=True).first %}
+  {% if default %}
+  <h4>Current default template: <em>{{ default.template_name }}</em></h4>
+  {% endif %}
+  <h2>Manage Templates:</h2>
+  <a href="/makeTemplate" class="btn btn-primary">Create / Edit Templates</a>
+  {% endwith %}
 </div>
 
 <script>

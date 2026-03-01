@@ -191,12 +191,47 @@ Good Luck!
       });
     },
   });
+
+  // when an existing template is selected, load its content and name into form
+  document.addEventListener('DOMContentLoaded', function() {
+    var select = document.getElementById('existing_templates');
+    if (select) {
+      select.addEventListener('change', function() {
+        var option = this.options[this.selectedIndex];
+        if (option && option.value) {
+          document.getElementById('templateName').value = option.getAttribute('data-name');
+          tinymce.get('editor').setContent(option.getAttribute('data-content'));
+          var isDefault = option.getAttribute('data-default') === 'True';
+          document.getElementById('is_default').checked = isDefault;
+        } else {
+          document.getElementById('templateName').value = '';
+          tinymce.get('editor').setContent('');
+          document.getElementById('is_default').checked = false;
+        }
+      });
+    }
+  });
 </script>
 {% endblock raw %} {% block body %}
 <div class="center-content">
   <h3>Create Recommendation Letter Template</h3>
   <form action="/getTemplate" method="post">
     <div class="user-details">
+      <!-- if there are existing templates, allow selection for editing -->
+      {% if templates and templates.count > 0 %}
+      <div class="input-box">
+        <span class="details">Existing Templates:</span>
+        <select id="existing_templates" name="existing_template">
+          <option value="">-- new template --</option>
+          {% for tmp in templates %}
+            <option value="{{ tmp.pk }}" data-content="{{ tmp.template|escapejs }}" data-name="{{ tmp.template_name }}" data-default="{{ tmp.is_default }}">
+              {{ tmp.template_name }}{% if tmp.is_default %} (default){% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
       <div class="input-box">
         <br />
         <br />
@@ -205,6 +240,7 @@ Good Luck!
           type="text"
           placeholder="Template Name"
           name="templateName"
+          id="templateName"
           required
         />
       </div>
@@ -213,10 +249,12 @@ Good Luck!
       <span class="details2">Template Content : </span>
     </div>
     <textarea id="editor" name="content"></textarea>
-    
-    
+
+    <div>
+      <label><input type="checkbox" name="is_default" id="is_default" /> Make this my default template</label>
+    </div>
+
     <input type="hidden" value="{{professor.unique_id}}" name="uid" readonly />
-    
 
     <div class="button-container">
       <div class="button">
@@ -253,4 +291,18 @@ Good Luck!
   text-align: left;
 }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    {% if template %}
+      // load values when coming back from save or editing
+      document.getElementById('templateName').value = {{ template.template_name|json_script:"tmpname" }};
+      if (tinymce.get('editor')) {
+        tinymce.get('editor').setContent({{ template.template|json_script:"tmpcontent" }});
+      }
+      document.getElementById('is_default').checked = {{ template.is_default|yesno:"true,false" }};
+    {% endif %}
+  });
+</script>
+
 {% endblock body %}
