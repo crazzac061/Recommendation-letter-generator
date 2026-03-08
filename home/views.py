@@ -611,43 +611,20 @@ def studentform1(request):
             teachers = TeacherInfo.objects.filter(department=stu.department)
             if TeacherInfo.objects.filter(unique_id=id).exists():
                 prof = TeacherInfo.objects.get(unique_id=id)
-                info = Application(
-                    name=stu.username,
-                    email=uemail,
-                    professor=prof,
-                    std=stu,
-                    is_pro=is_project,
-                    years_taught=known_year,
-                    subjects=listToStr,
-                    is_paper = has_paper,
-                    intern = True if intern == "on" else False,
-                    personal_statement = pstatement,
-                    recommendation_purpose = rpurpose,
-                    linkedIn = linkedIn_link,
-                    relationship_type = relationship_type,
-                    intern_company = intern_company,
-                    intern_role = intern_role,
-                    intern_duration = intern_duration,
-                    intern_outcome = intern_outcome,
-                    scholarships = scholarships,
-                    competitions_won = competitions_won,
-                    class_size = class_size if class_size else None,
-                    ranking_percentile = ranking_percentile,
-                    language_instruction = language_instruction,
-                )
-                
-                if Application.objects.filter(std__username = naam ,professor__name = prof.name ).exists():
-                    info = Application.objects.get(std__username = naam ,professor__name = prof.name)
-                    info.name=stu.username 
-                    info.email=uemail 
-                    info.professor=prof 
-                    info.std=stu 
-                    info.is_pro=is_project 
-                    info.years_taught=known_year 
-                    info.subjects=listToStr 
-                    info.is_paper = has_paper 
+                # create or update Application record and persist before using it
+                if Application.objects.filter(std__username=naam, professor__name=prof.name).exists():
+                    info = Application.objects.get(std__username=naam, professor__name=prof.name)
+                    # update fields
+                    info.name = stu.username
+                    info.email = uemail
+                    info.professor = prof
+                    info.std = stu
+                    info.is_pro = is_project
+                    info.years_taught = known_year
+                    info.subjects = listToStr
+                    info.is_paper = has_paper
                     info.intern = True if intern == "on" else False
-                    info.personal_statement = pstatement 
+                    info.personal_statement = pstatement
                     info.recommendation_purpose = rpurpose
                     info.linkedIn = linkedIn_link
                     info.intern_company = intern_company
@@ -661,18 +638,44 @@ def studentform1(request):
                     info.language_instruction = language_instruction
                     info.relationship_type = relationship_type
                     info.save()
-                
-                # ensure project_info variable exists before we try to save
+                else:
+                    info = Application(
+                        name=stu.username,
+                        email=uemail,
+                        professor=prof,
+                        std=stu,
+                        is_pro=is_project,
+                        years_taught=known_year,
+                        subjects=listToStr,
+                        is_paper=has_paper,
+                        intern=True if intern == "on" else False,
+                        personal_statement=pstatement,
+                        recommendation_purpose=rpurpose,
+                        linkedIn=linkedIn_link,
+                        relationship_type=relationship_type,
+                        intern_company=intern_company,
+                        intern_role=intern_role,
+                        intern_duration=intern_duration,
+                        intern_outcome=intern_outcome,
+                        scholarships=scholarships,
+                        competitions_won=competitions_won,
+                        class_size=class_size if class_size else None,
+                        ranking_percentile=ranking_percentile,
+                        language_instruction=language_instruction,
+                    )
+                    info.save()
+
+                # now that 'info' is saved and has a primary key, handle related objects
                 project_info = Project(
-                    supervised_project = s_project,
-                    final_project = pro1,
-                    deployed = True if deployed == "on" else False,
-                    application = info,
+                    supervised_project=s_project,
+                    final_project=pro1,
+                    deployed=True if deployed == "on" else False,
+                    application=info,
                 )
-                if Project.objects.filter(application = info).exists():
+                if Project.objects.filter(application=info).exists():
                     project = Project.objects.get(application=info)
                     project.delete()
-                    
+
                 project_info.save()
                     
                 
@@ -959,14 +962,19 @@ def loginTeacher(request):
                     is_generated=False, professor__unique_id=unique
                 )
 
+                # determine default custom template for this teacher if any
+                default_template = teacher_model.customtemplates_set.filter(is_default=True).first()
                 response = render(
-                    request,{
+                    request,
+                    "Teacher.html",
+                    {
                         "all_students": generated_dataharu,
                         "student_list": non_generated,
                         "check_value": check_value,
                         "teacher_number": number,
                         "std_dataharu": std_dataharu,
                         "teacher_model": teacher_model,
+                        "default_template": default_template,
                     },
                 )
                 return response
@@ -1020,6 +1028,8 @@ def loginTeacher(request):
                 non_generated = Application.objects.filter(
                     is_generated=False, professor__unique_id=unique
                 )
+                # compute default custom template for this teacher
+                default_template = teacher_model.customtemplates_set.filter(is_default=True).first()
                 response = render(
                     request,
                     "Teacher.html",
@@ -1030,6 +1040,7 @@ def loginTeacher(request):
                         "teacher_number": number,
                         "std_dataharu": std_dataharu,
                         "teacher_model": teacher_model,
+                        "default_template": default_template,
                     },
                 )
                 response.set_cookie("unique", unique)
@@ -1757,6 +1768,18 @@ def renderCustom(request):
         firstname = fname[0]
         length = len(subjec)
         value = True if length == 1 else False
+        # pronouns and helper values (same as download_letter)
+        gender = application.std.gender or ''
+        if gender.lower() == 'male':
+            pronoun = 'He'; pronoun_obj = 'him'; pronoun_pos = 'His'
+        elif gender.lower() == 'female':
+            pronoun = 'She'; pronoun_obj = 'her'; pronoun_pos = 'Her'
+        else:
+            pronoun = 'They'; pronoun_obj = 'them'; pronoun_pos = 'Their'
+        rel_desc = 'teacher'
+        strength_phrase = 'with great enthusiasm'
+        deadline = university.uni_deadline.strftime("%B %d, %Y") if university.uni_deadline else ''
+        app = application
         # Template selection logic
         template_obj = None
         if template_name and template_name != 'default':
@@ -1769,60 +1792,103 @@ def renderCustom(request):
         if not template_obj:
             template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
         if not template_obj:
-            # Fallback to a hardcoded default template
+            # Fallback to a hardcoded default template (updated as requested)
             default_template_content = """
-To Whom It May Concern,
+{{ today }}
+{% if university.uni_name %}
+Admissions Committee
+{% if university.program_applied %}{{ university.program_applied }} Program
+{% endif %} {{ university.uni_name }}
+{% else %}
+To Whom It May Concern
+{% endif %}
+Re: Letter of Recommendation for {{ app.name }}{% if university.program_applied %} — {{ university.program_applied }}{% endif %}{% if university.uni_name %} at {{ university.uni_name }}{% endif %}
+{# ── PARAGRAPH 1 · Introduction & relationship ── #}
 
-I am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.
-{% if student.relationship_type %}I have known {{ student.name }} as {{ student.relationship_type }}.{% endif %}
+It is my distinct pleasure to recommend {{ app.name }}{% if app.name|slice("-1") != "." %},{% endif %} a student in the {{ app.std.program.program_name }} program, Department of {{ app.std.department.dept_name }}, at the Institute of Engineering, Pulchowk Campus, Tribhuvan University. I have had the privilege of knowing {{ app.name }} in my capacity as {{ pronoun_pos|lower }} {{ rel_desc }} {% if app.years_taught %} for {% if app.years_taught == 1 %}one academic year{% else %}{{ app.years_taught }} academic years{% endif %} {% endif %} {% if app.subjects %} , during which I taught {{ pronoun_obj|lower }} in {{ app.subjects }}{% if app.language_instruction %} (taught in {{ app.language_instruction }}){% endif %}. {% else %} . {% endif %} In this time, {{ pronoun|lower }} has consistently stood out as one of the most capable and driven students I have encountered throughout my academic career.
+{# ── PARAGRAPH 2 · Academic performance ── #} {% if academics.gpa or academics.tentative_ranking or app.ranking_percentile or app.class_size %}
 
-{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.
+Academically, {{ app.name }} has demonstrated outstanding performance throughout {{ pronoun_pos|lower }} studies. {% if academics.gpa %} {{ pronoun|lower }} has maintained a cumulative GPA of {{ academics.gpa }} {% if app.class_size and academics.tentative_ranking %} , ranking {{ academics.tentative_ranking }} out of {{ app.class_size }} students in the program {% elif academics.tentative_ranking %} , placing {{ pronoun_obj|lower }} at rank {{ academics.tentative_ranking }} {% endif %} {% if app.ranking_percentile %} — within the top {{ app.ranking_percentile }}% of the cohort {% endif %}. {% elif app.class_size and academics.tentative_ranking %} {{ pronoun|lower }} ranks {{ academics.tentative_ranking }} out of {{ app.class_size }} students in the department. {% elif app.ranking_percentile %} {{ pronoun|lower }} falls within the top {{ app.ranking_percentile }}% of the program. {% endif %} This level of achievement reflects not merely intellectual aptitude, but a genuine commitment to rigorous scholarship and academic discipline.
+{% endif %} {# ── PARAGRAPH 3 · Research & paper ── #} {% if app.is_paper and paper.paper_title %}
 
-{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class{% if student.class_size %} (class size {{ student.class_size }}){% endif %}{% if student.ranking_percentile %}, approximately {{ student.ranking_percentile }} percentile{% endif %}.{% endif %}
+Beyond the classroom, {{ app.name }} has made meaningful contributions to academic research. {{ pronoun|lower }} co-authored the paper titled "{{ paper.paper_title }}"{% if paper.paper_link %}, available at {{ paper.paper_link }}{% endif %}, which is a testament to {{ pronoun_pos|lower }} ability to engage with original inquiry, synthesise complex findings, and contribute substantively to scholarly discourse. I was directly involved in supervising this work and can attest to the intellectual rigour and dedication {{ pronoun|lower }} brought to every stage of the research process.
+{% endif %} {# ── PARAGRAPH 4 · Project work ── #} {% if project.supervised_project or project.final_project %}
 
-{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled "{{ project.supervised_project }}"{% if project.final_project %}, and also worked on "{{ project.final_project }}"{% endif %}.{% endif %}
+{{ app.name }} has also demonstrated strong applied engineering competence through {{ pronoun_pos|lower }} project work. {% if project.supervised_project %} Under my direct supervision, {{ pronoun|lower }} successfully completed the project titled "{{ project.supervised_project }}", which required advanced technical knowledge and an ability to translate theoretical concepts into practical solutions. {% endif %} {% if project.final_project %} {{ pronoun_pos|lower }} final-year project, "{{ project.final_project }}", further showcased {{ pronoun_pos|lower }} engineering acumen and problem-solving capabilities. {% endif %} {% if project.deployed %} Notably, {{ pronoun_pos|lower }} work was successfully deployed in a real-world environment — a distinction that underscores both the quality and practical viability of {{ pronoun_pos|lower }} contribution. {% endif %}
+{% endif %} {# ── PARAGRAPH 5 · Internship ── #} {% if app.intern %}
 
-{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper "{{ paper.paper_title }}"{% if paper.paper_link %} ({{ paper.paper_link }}){% endif %}.{% endif %}
+In addition to {{ pronoun_pos|lower }} academic pursuits, {{ app.name }} undertook a professional internship {% if app.intern_company %}at {{ app.intern_company }}{% endif %} {% if app.intern_role %}, serving as a {{ app.intern_role }}{% endif %} {% if app.intern_duration %} for {{ app.intern_duration }}{% endif %}. {% if app.intern_outcome %} {{ pronoun|lower }} {{ app.intern_outcome }}, demonstrating a capacity to apply academic knowledge in professional, high-pressure settings and to deliver measurable results. {% else %} This experience allowed {{ pronoun_obj|lower }} to complement {{ pronoun_pos|lower }} technical education with practical industry exposure, further preparing {{ pronoun_obj|lower }} for the demands of advanced study and professional practice. {% endif %}
+{% endif %} {# ── PARAGRAPH 6 · Qualities & character ── #} {% if quality %}
 
-{% if student.linkedIn %}You may review the student's background via LinkedIn: {{ student.linkedIn }}.{% endif %}
+What distinguishes {{ app.name }} beyond {{ pronoun_pos|lower }} academic and technical accomplishments is {{ pronoun_pos|lower }} character and disposition.  {% if quality.leadership %} {{ pronoun|lower }} has consistently exhibited strong leadership, {% if quality.teamwork %}paired with a genuine talent for collaboration and teamwork,{% endif %} {% if quality.hardworking %}alongside an unwavering work ethic{% endif %}. {% elif quality.hardworking %} {{ pronoun|lower }} is exceptionally hardworking and {% if quality.teamwork %}an outstanding team player{% endif %}. {% elif quality.teamwork %} {{ pronoun|lower }} excels as a team player, consistently elevating the performance of those around {{ pronoun_obj|lower }}. {% endif %} {% if quality.friendly and quality.social %} {{ pronoun_pos|lower }} warm, approachable nature and social awareness make {{ pronoun_obj|lower }} a positive presence in any collaborative environment. {% elif quality.friendly %} {{ pronoun_pos|lower }} approachable and collegial manner makes {{ pronoun_obj|lower }} easy to work with at every level. {% endif %} {% if quality.presentation %} {{ pronoun|lower }} has also shown a notable ability in {{ quality.presentation }}. {% endif %} {% if quality.quality %} Colleagues and peers frequently remark on {{ pronoun_pos|lower }} {{ quality.quality }}. {% endif %}
+{% endif %} {# ── PARAGRAPH 7 · Extracurricular & awards ── #} {% if quality.extracirricular or app.scholarships or app.competitions_won %}
 
-{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}
+{{ app.name }}'s contributions extend well beyond academic coursework. {% if quality.extracirricular %} {{ pronoun|lower }} has been an active participant in {{ quality.extracirricular }}, demonstrating initiative and a commitment to holistic personal development. {% endif %} {% if app.scholarships %} {{ pronoun_pos|lower }} academic excellence has been formally recognised through {{ app.scholarships }}. {% endif %} {% if app.competitions_won %} Furthermore, {{ pronoun|lower }} has achieved distinction in {{ app.competitions_won }}, reflecting both competitive aptitude and the ability to perform under pressure. {% endif %}
+{% endif %} {# ── PARAGRAPH 8 · Professor's personal anecdote (optional, added later) ── #} {% if app.prof_anecdote %}
 
-{% if student.intern %}{% if student.intern_company %}{{ student.name }} completed an internship at {{ student.intern_company }}{% if student.intern_role %} as {{ student.intern_role }}{% endif %}{% if student.intern_duration %} for {{ student.intern_duration }}{% endif %}{% if student.intern_outcome %}, where {{ student.intern_outcome }}{% endif %}.{% endif %}{% endif %}
+I would like to share a particular instance that encapsulates the qualities I have described above. {{ app.prof_anecdote }}
+{% endif %} {# ── PARAGRAPH 9 · Personal statement tie-in ── #} {% if app.personal_statement %}
 
-{% if student.scholarships %}Scholarships/awards: {{ student.scholarships }}.{% endif %}
-{% if student.competitions_won %}Competitions won: {{ student.competitions_won }}.{% endif %}
+Having reviewed {{ app.name }}'s personal statement, I can affirm that the motivations and aspirations expressed therein align precisely with what I have observed firsthand. {{ pronoun_pos }} intellectual curiosity, clarity of purpose, and commitment to {{ pronoun_pos|lower }} field are evident in everything {{ pronoun|lower }} undertakes.
+{% endif %} {# ── PARAGRAPH 10 · Closing recommendation ── #}
 
-{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}
+In summary, I recommend {{ app.name }} {{ strength_phrase }} {% if university.program_applied and university.uni_name %} for the {{ university.program_applied }} program at {{ university.uni_name }}. {% elif university.program_applied %} for the {{ university.program_applied }} program. {% elif app.recommendation_purpose %} for {{ app.recommendation_purpose }}. {% else %} for further graduate study and professional advancement. {% endif %} {{ pronoun|lower }} possesses the intellectual capacity, personal integrity, and professional maturity to excel in a demanding academic environment and to make meaningful contributions to {{ pronoun_pos|lower }} chosen field. I am fully confident that {{ pronoun|lower }} will prove to be an asset to any institution fortunate enough to admit {{ pronoun_obj|lower }}.
+{# ── PARAGRAPH 11 · Contact ── #}
 
-{% if student.prof_anecdote %}{{ student.prof_anecdote }}{% endif %}
+Should you require any additional information or wish to discuss {{ app.name }}'s qualifications further, please do not hesitate to contact me directly at {{ teacher.email }} {% if teacher.phone %}or by telephone at {{ teacher.phone }}{% endif %}. I shall be happy to assist in any way I can.
 
-{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}
+Yours sincerely,
+{% if teacher.images %} Professor {{ teacher.name }} {% endif %}
 
-If you require any further information, please feel free to contact me at {{ teacher.email }}.
-
-Sincerely,
 {{ teacher.name }}
-{{ teacher.title }}
-IOE Pulchowk Campus
+
+{{ teacher.title }}{% if teacher.designation %}, {{ teacher.designation }}{% endif %}
+Department of {{ teacher.department.dept_name }}
+Institute of Engineering, Pulchowk Campus
+Tribhuvan University, Nepal
+{% if teacher.office_address %}Office: {{ teacher.office_address }}
+{% endif %} {% if teacher.phone %}Tel: {{ teacher.phone }}
+{% endif %} {{ teacher.email }}
+{% if deadline %}
+
+Application Deadline: {{ deadline }}
+{% endif %} 
 """
             jinja_template = Template(default_template_content)
         else:
             jinja_template = Template(template_obj.template)
-        rendered_letter = jinja_template.render({
-            "student": application,
-            'subjects': subjects,
-            'subject': subject,
-            'value': value,
-            'firstname': firstname,
-            "paper": paper,
-            "project": project,
+        try:
+            rendered_letter = jinja_template.render({
+                "student": application,
+                'app': app,
+                'subjects': subjects,
+                'subject': subject,
+                'value': value,
+                'firstname': firstname,
+                "paper": paper,
+                "project": project,
             "university": university,
             "quality": quality,
             "academics": academics,
             "teacher": teacher_model,
             "files": files,
+            'pronoun': pronoun,
+            'pronoun_obj': pronoun_obj,
+            'pronoun_pos': pronoun_pos,
+            'rel_desc': rel_desc,
+            'strength_phrase': strength_phrase,
+            'deadline': deadline,
+            'today': datetime.date.today().strftime("%B %d, %Y"),
         })
+        except Exception as exc:
+            # debug output for unexpected template failures
+            print("=== Jinja render exception ===")
+            try:
+                print("template source:\n", jinja_template.source)
+            except Exception:
+                pass
+            print("exception:", exc)
+            raise
         return render(request, 'test2.html', {'letter': rendered_letter, 'student': application})
 
 
@@ -2003,86 +2069,139 @@ def download_letter(request):
     if request.method == 'POST':
         roll = request.POST.get('roll')
         file_format = request.POST.get('format')
-        unique = request.COOKIES.get('unique')
-        # Fetch all context data as in renderCustom
-        application = Application.objects.get(std__roll_number=roll, professor__unique_id=unique)
-        paper = Paper.objects.get(application=application)
-        project = Project.objects.get(application=application)
-        university = University.objects.get(application=application)
-        quality = Qualities.objects.get(application=application)
-        academics = Academics.objects.get(application=application)
-        teacher_model = application.professor
-        files = Files.objects.get(application=application)
-        bisaya = application.subjects
-        subjec = bisaya.split(',')
-        subjects = subjec[:-1]
-        subject = subjec[-1]
-        name = application.name
-        fname = name.split(' ')
-        firstname = fname[0]
-        length = len(subjec)
-        value = True if length == 1 else False
-        # Template selection logic (reuse from renderCustom)
-        # prefer the template marked as default first
-        template_obj = CustomTemplates.objects.filter(professor=teacher_model, is_default=True).first()
-        if not template_obj:
-            template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
-        if not template_obj:
-            default_template_content = """
-To Whom It May Concern,
+        # professors may edit the generated letter; if they submit edited text use it directly
+        edited_text = request.POST.get('edited_letter')
 
-I am delighted to write this letter of recommendation for {{ student.name }}, who has been a student in my {{ subjects|join(', ') }} class{{ 'es' if subjects|length > 1 else '' }} at IOE Pulchowk Campus.
-{% if student.relationship_type %}I have known {{ student.name }} as {{ student.relationship_type }}.{% endif %}
-
-{% if student.gender == 'male' %}He{% elif student.gender == 'female' %}She{% else %}They{% endif %} has consistently demonstrated a high level of dedication and academic excellence.
-
-{% if academics.gpa %}With a GPA of {{ academics.gpa }}, {{ student.name }} ranks among the top students in the class{% if student.class_size %} (class size {{ student.class_size }}){% endif %}{% if student.ranking_percentile %}, approximately {{ student.ranking_percentile }} percentile{% endif %}.{% endif %}
-
-{% if project.supervised_project %}In addition to coursework, {{ student.name }} successfully completed the project titled "{{ project.supervised_project }}"{% if project.final_project %}, and also worked on "{{ project.final_project }}"{% endif %}.{% endif %}
-
-{% if paper.paper_title %}{{ student.name }} has also contributed to research, co-authoring the paper "{{ paper.paper_title }}"{% if paper.paper_link %} ({{ paper.paper_link }}){% endif %}.{% endif %}
-
-{% if student.linkedIn %}You may review the student's background via LinkedIn: {{ student.linkedIn }}.{% endif %}
-
-{% if quality.extracirricular %}Beyond academics, {{ student.name }} has actively participated in extracurricular activities such as {{ quality.extracirricular }}.{% endif %}
-
-{% if student.intern %}{% if student.intern_company %}{{ student.name }} completed an internship at {{ student.intern_company }}{% if student.intern_role %} as {{ student.intern_role }}{% endif %}{% if student.intern_duration %} for {{ student.intern_duration }}{% endif %}{% if student.intern_outcome %}, where {{ student.intern_outcome }}{% endif %}.{% endif %}{% endif %}
-
-{% if student.scholarships %}Scholarships/awards: {{ student.scholarships }}.{% endif %}
-{% if student.competitions_won %}Competitions won: {{ student.competitions_won }}.{% endif %}
-
-{% if quality.leadership %}{{ student.name }} has shown strong leadership skills.{% endif %}{% if quality.hardworking %} {{ student.name }} is known for a hardworking attitude.{% endif %}{% if quality.teamwork %} {{ student.name }} excels in teamwork and collaboration.{% endif %}
-
-{% if student.prof_anecdote %}{{ student.prof_anecdote }}{% endif %}
-
-{% if university.uni_name and university.program_applied %}I strongly recommend {{ student.name }} for the {{ university.program_applied }} program at {{ university.uni_name }}.{% else %}I strongly recommend {{ student.name }} for further studies and future endeavors.{% endif %}
-
-If you require any further information, please feel free to contact me at {{ teacher.email }}.
-
-Sincerely,
-{{ teacher.name }}
-{{ teacher.title }}
-IOE Pulchowk Campus
-"""
-            jinja_template = Template(default_template_content)
+        if edited_text:
+            rendered_letter = edited_text
         else:
-            jinja_template = Template(template_obj.template)
-        context = {
-            "student": application,
-            'subjects': subjects,
-            'subject': subject,
-            'value': value,
-            'firstname': firstname,
-            "paper": paper,
-            "project": project,
-            "university": university,
-            "quality": quality,
-            "academics": academics,
-            "teacher": teacher_model,
-            "files": files,
-            "today": datetime.date.today().strftime("%B %d, %Y"),
-        }
-        rendered_letter = jinja_template.render(context)
+            unique = request.COOKIES.get('unique')
+            # Fetch all context data as in renderCustom
+            application = Application.objects.get(std__roll_number=roll, professor__unique_id=unique)
+            paper = Paper.objects.get(application=application)
+            project = Project.objects.get(application=application)
+            university = University.objects.get(application=application)
+            quality = Qualities.objects.get(application=application)
+            academics = Academics.objects.get(application=application)
+            teacher_model = application.professor
+            files = Files.objects.get(application=application)
+            bisaya = application.subjects
+            subjec = bisaya.split(',')
+            subjects = subjec[:-1]
+            subject = subjec[-1]
+            name = application.name
+            fname = name.split(' ')
+            firstname = fname[0]
+            length = len(subjec)
+            value = True if length == 1 else False
+            # pronouns and related helper values
+            gender = application.std.gender or ''
+            if gender.lower() == 'male':
+                pronoun = 'He'; pronoun_obj = 'him'; pronoun_pos = 'His'
+            elif gender.lower() == 'female':
+                pronoun = 'She'; pronoun_obj = 'her'; pronoun_pos = 'Her'
+            else:
+                pronoun = 'They'; pronoun_obj = 'them'; pronoun_pos = 'Their'
+            rel_desc = 'teacher'
+            # simple strength phrase default
+            strength_phrase = 'with great enthusiasm'
+            # deadline formatted
+            deadline = university.uni_deadline.strftime("%B %d, %Y") if university.uni_deadline else ''
+            # alias for compatibility with template
+            app = application
+            # Template selection logic (reuse from renderCustom)
+            # prefer the template marked as default first
+            template_obj = CustomTemplates.objects.filter(professor=teacher_model, is_default=True).first()
+            if not template_obj:
+                template_obj = CustomTemplates.objects.filter(template_name__iexact='Default', professor=teacher_model).first()
+            if not template_obj:
+                # same long default template used in renderCustom
+                default_template_content = """
+{{ today }}
+{% if university.uni_name %}
+Admissions Committee
+{% if university.program_applied %}{{ university.program_applied }} Program
+{% endif %} {{ university.uni_name }}
+{% else %}
+To Whom It May Concern
+{% endif %}
+Re: Letter of Recommendation for {{ app.name }}{% if university.program_applied %} — {{ university.program_applied }}{% endif %}{% if university.uni_name %} at {{ university.uni_name }}{% endif %}
+{# ── PARAGRAPH 1 · Introduction & relationship ── #}
+
+It is my distinct pleasure to recommend {{ app.name }}{% if app.name|slice("-1") != "." %},{% endif %} a student in the {{ app.std.program.program_name }} program, Department of {{ app.std.department.dept_name }}, at the Institute of Engineering, Pulchowk Campus, Tribhuvan University. I have had the privilege of knowing {{ app.name }} in my capacity as {{ pronoun_pos|lower }} {{ rel_desc }} {% if app.years_taught %} for {% if app.years_taught == 1 %}one academic year{% else %}{{ app.years_taught }} academic years{% endif %} {% endif %} {% if app.subjects %} , during which I taught {{ pronoun_obj|lower }} in {{ app.subjects }}{% if app.language_instruction %} (taught in {{ app.language_instruction }}){% endif %}. {% else %} . {% endif %} In this time, {{ pronoun|lower }} has consistently stood out as one of the most capable and driven students I have encountered throughout my academic career.
+{# ── PARAGRAPH 2 · Academic performance ── #} {% if academics.gpa or academics.tentative_ranking or app.ranking_percentile or app.class_size %}
+
+Academically, {{ app.name }} has demonstrated outstanding performance throughout {{ pronoun_pos|lower }} studies. {% if academics.gpa %} {{ pronoun|lower }} has maintained a cumulative GPA of {{ academics.gpa }} {% if app.class_size and academics.tentative_ranking %} , ranking {{ academics.tentative_ranking }} out of {{ app.class_size }} students in the program {% elif academics.tentative_ranking %} , placing {{ pronoun_obj|lower }} at rank {{ academics.tentative_ranking }} {% endif %} {% if app.ranking_percentile %} — within the top {{ app.ranking_percentile }}% of the cohort {% endif %}. {% elif app.class_size and academics.tentative_ranking %} {{ pronoun|lower }} ranks {{ academics.tentative_ranking }} out of {{ app.class_size }} students in the department. {% elif app.ranking_percentile %} {{ pronoun|lower }} falls within the top {{ app.ranking_percentile }}% of the program. {% endif %} This level of achievement reflects not merely intellectual aptitude, but a genuine commitment to rigorous scholarship and academic discipline.
+{% endif %} {# ── PARAGRAPH 3 · Research & paper ── #} {% if app.is_paper and paper.paper_title %}
+
+Beyond the classroom, {{ app.name }} has made meaningful contributions to academic research. {{ pronoun|lower }} co-authored the paper titled "{{ paper.paper_title }}"{% if paper.paper_link %}, available at {{ paper.paper_link }}{% endif %}, which is a testament to {{ pronoun_pos|lower }} ability to engage with original inquiry, synthesise complex findings, and contribute substantively to scholarly discourse. I was directly involved in supervising this work and can attest to the intellectual rigour and dedication {{ pronoun|lower }} brought to every stage of the research process.
+{% endif %} {# ── PARAGRAPH 4 · Project work ── #} {% if project.supervised_project or project.final_project %}
+
+{{ app.name }} has also demonstrated strong applied engineering competence through {{ pronoun_pos|lower }} project work. {% if project.supervised_project %} Under my direct supervision, {{ pronoun|lower }} successfully completed the project titled "{{ project.supervised_project }}", which required advanced technical knowledge and an ability to translate theoretical concepts into practical solutions. {% endif %} {% if project.final_project %} {{ pronoun_pos|lower }} final-year project, "{{ project.final_project }}", further showcased {{ pronoun_pos|lower }} engineering acumen and problem-solving capabilities. {% endif %} {% if project.deployed %} Notably, {{ pronoun_pos|lower }} work was successfully deployed in a real-world environment — a distinction that underscores both the quality and practical viability of {{ pronoun_pos|lower }} contribution. {% endif %}
+{% endif %} {# ── PARAGRAPH 5 · Internship ── #} {% if app.intern %}
+
+In addition to {{ pronoun_pos|lower }} academic pursuits, {{ app.name }} undertook a professional internship {% if app.intern_company %}at {{ app.intern_company }}{% endif %} {% if app.intern_role %}, serving as a {{ app.intern_role }}{% endif %} {% if app.intern_duration %} for {{ app.intern_duration }}{% endif %}. {% if app.intern_outcome %} {{ pronoun|lower }} {{ app.intern_outcome }}, demonstrating a capacity to apply academic knowledge in professional, high-pressure settings and to deliver measurable results. {% else %} This experience allowed {{ pronoun_obj|lower }} to complement {{ pronoun_pos|lower }} technical education with practical industry exposure, further preparing {{ pronoun_obj|lower }} for the demands of advanced study and professional practice. {% endif %}
+{% endif %} {# ── PARAGRAPH 6 · Qualities & character ── #} {% if quality %}
+
+What distinguishes {{ app.name }} beyond {{ pronoun_pos|lower }} academic and technical accomplishments is {{ pronoun_pos|lower }} character and disposition.  {% if quality.leadership %} {{ pronoun|lower }} has consistently exhibited strong leadership, {% if quality.teamwork %}paired with a genuine talent for collaboration and teamwork,{% endif %} {% if quality.hardworking %}alongside an unwavering work ethic{% endif %}. {% elif quality.hardworking %} {{ pronoun|lower }} is exceptionally hardworking and {% if quality.teamwork %}an outstanding team player{% endif %}. {% elif quality.teamwork %} {{ pronoun|lower }} excels as a team player, consistently elevating the performance of those around {{ pronoun_obj|lower }}. {% endif %} {% if quality.friendly and quality.social %} {{ pronoun_pos|lower }} warm, approachable nature and social awareness make {{ pronoun_obj|lower }} a positive presence in any collaborative environment. {% elif quality.friendly %} {{ pronoun_pos|lower }} approachable and collegial manner makes {{ pronoun_obj|lower }} easy to work with at every level. {% endif %} {% if quality.presentation %} {{ pronoun|lower }} has also shown a notable ability in {{ quality.presentation }}. {% endif %} {% if quality.quality %} Colleagues and peers frequently remark on {{ pronoun_pos|lower }} {{ quality.quality }}. {% endif %}
+{% endif %} {# ── PARAGRAPH 7 · Extracurricular & awards ── #} {% if quality.extracirricular or app.scholarships or app.competitions_won %}
+
+{{ app.name }}'s contributions extend well beyond academic coursework. {% if quality.extracirricular %} {{ pronoun|lower }} has been an active participant in {{ quality.extracirricular }}, demonstrating initiative and a commitment to holistic personal development. {% endif %} {% if app.scholarships %} {{ pronoun_pos|lower }} academic excellence has been formally recognised through {{ app.scholarships }}. {% endif %} {% if app.competitions_won %} Furthermore, {{ pronoun|lower }} has achieved distinction in {{ app.competitions_won }}, reflecting both competitive aptitude and the ability to perform under pressure. {% endif %}
+{% endif %} {# ── PARAGRAPH 8 · Professor's personal anecdote (optional, added later) ── #} {% if app.prof_anecdote %}
+
+I would like to share a particular instance that encapsulates the qualities I have described above. {{ app.prof_anecdote }}
+{% endif %} {# ── PARAGRAPH 9 · Personal statement tie-in ── #} {% if app.personal_statement %}
+
+Having reviewed {{ app.name }}'s personal statement, I can affirm that the motivations and aspirations expressed therein align precisely with what I have observed firsthand. {{ pronoun_pos }} intellectual curiosity, clarity of purpose, and commitment to {{ pronoun_pos|lower }} field are evident in everything {{ pronoun|lower }} undertakes.
+{% endif %} {# ── PARAGRAPH 10 · Closing recommendation ── #} {% if university.program_applied and university.uni_name %} for the {{ university.program_applied }} program at {{ university.uni_name }}. {% elif university.program_applied %} for the {{ university.program_applied }} program. {% elif app.recommendation_purpose %} for {{ app.recommendation_purpose }}. {% else %} for further graduate study and professional advancement. {% endif %} {{ pronoun|lower }} possesses the intellectual capacity, personal integrity, and professional maturity to excel in a demanding academic environment and to make meaningful contributions to {{ pronoun_pos|lower }} chosen field. I am fully confident that {{ pronoun|lower }} will prove to be an asset to any institution fortunate enough to admit {{ pronoun_obj|lower }}.
+{# ── PARAGRAPH 11 · Contact ── #}
+
+Should you require any additional information or wish to discuss {{ app.name }}'s qualifications further, please do not hesitate to contact me directly at {{ teacher.email }} {% if teacher.phone %}or by telephone at {{ teacher.phone }}{% endif %}. I shall be happy to assist in any way I can.
+
+Yours sincerely,
+{% if teacher.images %} Professor {{ teacher.name }} {% endif %}
+
+{{ teacher.name }}
+
+{{ teacher.title }}{% if teacher.designation %}, {{ teacher.designation }}{% endif %}
+Department of {{ teacher.department.dept_name }}
+Institute of Engineering, Pulchowk Campus
+Tribhuvan University, Nepal
+{% if teacher.office_address %}Office: {{ teacher.office_address }}
+{% endif %} {% if teacher.phone %}Tel: {{ teacher.phone }}
+{% endif %} {{ teacher.email }}
+{% if deadline %}
+
+Application Deadline: {{ deadline }}
+{% endif %} 
+"""
+                jinja_template = Template(default_template_content)
+            else:
+                jinja_template = Template(template_obj.template)
+            context = {
+                "student": application,
+                'app': app,
+                'subjects': subjects,
+                'subject': subject,
+                'value': value,
+                'firstname': firstname,
+                "paper": paper,
+                "project": project,
+                "university": university,
+                "quality": quality,
+                "academics": academics,
+                "teacher": teacher_model,
+                "files": files,
+                "today": datetime.date.today().strftime("%B %d, %Y"),
+                'pronoun': pronoun,
+                'pronoun_obj': pronoun_obj,
+                'pronoun_pos': pronoun_pos,
+                'rel_desc': rel_desc,
+                'strength_phrase': strength_phrase,
+                'deadline': deadline,
+            }
+            rendered_letter = jinja_template.render(context)
+
         if file_format == 'docx':
             doc = Document()
             for paragraph in rendered_letter.split('\n\n'):
@@ -2105,7 +2224,6 @@ IOE Pulchowk Campus
             return response
         else:
             return HttpResponse("Invalid format", status=400)
-
 def registerProfessor(request):
     if request.method == 'POST':
         form = TeacherInfoForm(request.POST, request.FILES)
@@ -2136,82 +2254,74 @@ def registerProfessor(request):
 
 def add_default_template_to_all_professors():
     from home.models import TeacherInfo, CustomTemplates
-    default_template_content = """<!DOCTYPE html>
-<html>
-<head>
-    <title>Letter of Recommendation</title>
-</head>
-<body>
-
-<p>{{ today }}</p>
-
-<p>To Whom It May Concern,</p>
-
-<p>
-I am writing to recommend {{ student.username }} from the {{ student.department }} department, currently enrolled in the {{ student.program }} program. I have taught {{ firstname }} for {{ application.years_taught }} year{% if application.years_taught|add:0 > 1 %}s{% endif %} in {% if value %}subjects such as {% for subject in subjects %}{{ subject }}{% if not forloop.last %}, {% endif %}{% endfor %}.{% else %}the subject {{ subjects.0 }}.{% endif %}
-</p>
-
-<p>
-During this period, {% if student.gender == "Male" %}he{% elif student.gender == "Female" %}she{% else %}they{% endif %} consistently demonstrated academic diligence, maintaining a GPA of {{ academics.gpa }} and ranking in the {{ academics.tentative_ranking }} of the class.
-</p>
-
-{% if application.is_pro == "yes" or project.supervised_project %}
-<p>
-I also had the opportunity to supervise a project titled "<strong>{{ project.supervised_project }}</strong>", which reflected a strong grasp of technical concepts and problem-solving. {% if project.final_project %}In the final year, the capstone project, "<strong>{{ project.final_project }}</strong>", further showcased {% if student.gender == "Male" %}his{% elif student.gender == "Female" %}her{% else %}their{% endif %} initiative and innovation.{% endif %} {% if project.deployed %}Notably, the project was successfully deployed, indicating practical applicability and a user-focused design.{% endif %}
-</p>
+    # same default letter used by renderCustom/download_letter
+    default_template_content = """
+{{ today }}
+{% if university.uni_name %}
+Admissions Committee
+{% if university.program_applied %}{{ university.program_applied }} Program
+{% endif %} {{ university.uni_name }}
+{% else %}
+To Whom It May Concern
 {% endif %}
+Re: Letter of Recommendation for {{ app.name }}{% if university.program_applied %} — {{ university.program_applied }}{% endif %}{% if university.uni_name %} at {{ university.uni_name }}{% endif %}
+{# ── PARAGRAPH 1 · Introduction & relationship ── #}
 
-{% if application.is_paper == "yes" and paper.paper_title %}
-<p>
-In addition to coursework, {% if student.gender == "Male" %}he{% elif student.gender == "Female" %}she{% else %}they{% endif %} co-authored a research paper titled "<strong>{{ paper.paper_title }}</strong>", available at <a href="{{ paper.paper_link }}">{{ paper.paper_link }}</a>. This work demonstrated a clear ability to conduct thorough research and communicate findings effectively.
-</p>
-{% endif %}
+It is my distinct pleasure to recommend {{ app.name }}{% if app.name|slice("-1") != "." %},{% endif %} a student in the {{ app.std.program.program_name }} program, Department of {{ app.std.department.dept_name }}, at the Institute of Engineering, Pulchowk Campus, Tribhuvan University. I have had the privilege of knowing {{ app.name }} in my capacity as {{ pronoun_pos|lower }} {{ rel_desc }} {% if app.years_taught %} for {% if app.years_taught == 1 %}one academic year{% else %}{{ app.years_taught }} academic years{% endif %} {% endif %} {% if app.subjects %} , during which I taught {{ pronoun_obj|lower }} in {{ app.subjects }}{% if app.language_instruction %} (taught in {{ app.language_instruction }}){% endif %}. {% else %} . {% endif %} In this time, {{ pronoun|lower }} has consistently stood out as one of the most capable and driven students I have encountered throughout my academic career.
+{# ── PARAGRAPH 2 · Academic performance ── #} {% if academics.gpa or academics.tentative_ranking or app.ranking_percentile or app.class_size %}
 
-{% if application.intern %}
-<p>
-Furthermore, an internship experience has contributed to a practical understanding of the industry, adding to {% if student.gender == "Male" %}his{% elif student.gender == "Female" %}her{% else %}their{% endif %} technical and collaborative skill set.
-</p>
-{% endif %}
+Academically, {{ app.name }} has demonstrated outstanding performance throughout {{ pronoun_pos|lower }} studies. {% if academics.gpa %} {{ pronoun|lower }} has maintained a cumulative GPA of {{ academics.gpa }} {% if app.class_size and academics.tentative_ranking %} , ranking {{ academics.tentative_ranking }} out of {{ app.class_size }} students in the program {% elif academics.tentative_ranking %} , placing {{ pronoun_obj|lower }} at rank {{ academics.tentative_ranking }} {% endif %} {% if app.ranking_percentile %} — within the top {{ app.ranking_percentile }}% of the cohort {% endif %}. {% elif app.class_size and academics.tentative_ranking %} {{ pronoun|lower }} ranks {{ academics.tentative_ranking }} out of {{ app.class_size }} students in the department. {% elif app.ranking_percentile %} {{ pronoun|lower }} falls within the top {{ app.ranking_percentile }}% of the program. {% endif %} This level of achievement reflects not merely intellectual aptitude, but a genuine commitment to rigorous scholarship and academic discipline.
+{% endif %} {# ── PARAGRAPH 3 · Research & paper ── #} {% if app.is_paper and paper.paper_title %}
 
-{% if quality.quality or quality.extracirricular %}
-<p>
-{% if student.gender == "Male" %}He{% elif student.gender == "Female" %}She{% else %}They{% endif %} exhibits {% if quality.hardworking %}a strong work ethic{% endif %}{% if quality.leadership %}, leadership potential{% endif %}{% if quality.teamwork %}, team collaboration{% endif %}{% if quality.social %}, and interpersonal skills{% endif %}. {% if quality.presentation %}Presentation skills are particularly noteworthy.{% endif %} {% if quality.friendly %}Peers find {% if student.gender == "Male" %}him{% elif student.gender == "Female" %}her{% else %}them{% endif %} approachable and easy to work with.{% endif %} {% if quality.extracirricular %}Engagement in extracurriculars adds to a well-rounded profile.{% endif %}
-</p>
-{% endif %}
+Beyond the classroom, {{ app.name }} has made meaningful contributions to academic research. {{ pronoun|lower }} co-authored the paper titled "{{ paper.paper_title }}"{% if paper.paper_link %}, available at {{ paper.paper_link }}{% endif %}, which is a testament to {{ pronoun_pos|lower }} ability to engage with original inquiry, synthesise complex findings, and contribute substantively to scholarly discourse. I was directly involved in supervising this work and can attest to the intellectual rigour and dedication {{ pronoun|lower }} brought to every stage of the research process.
+{% endif %} {# ── PARAGRAPH 4 · Project work ── #} {% if project.supervised_project or project.final_project %}
 
-{% if application.personal_statement %}
-<p>
-Regarding future goals, {% if student.gender == "Male" %}he{% elif student.gender == "Female" %}she{% else %}they{% endif %} shared the following personal motivation for applying:
-</p>
-<blockquote><em>{{ application.personal_statement }}</em></blockquote>
-{% endif %}
+{{ app.name }} has also demonstrated strong applied engineering competence through {{ pronoun_pos|lower }} project work. {% if project.supervised_project %} Under my direct supervision, {{ pronoun|lower }} successfully completed the project titled "{{ project.supervised_project }}", which required advanced technical knowledge and an ability to translate theoretical concepts into practical solutions. {% endif %} {% if project.final_project %} {{ pronoun_pos|lower }} final-year project, "{{ project.final_project }}", further showcased {{ pronoun_pos|lower }} engineering acumen and problem-solving capabilities. {% endif %} {% if project.deployed %} Notably, {{ pronoun_pos|lower }} work was successfully deployed in a real-world environment — a distinction that underscores both the quality and practical viability of {{ pronoun_pos|lower }} contribution. {% endif %}
+{% endif %} {# ── PARAGRAPH 5 · Internship ── #} {% if app.intern %}
 
-<p>
-Given the performance and personal qualities observed, I believe {% if student.gender == "Male" %}he{% elif student.gender == "Female" %}she{% else %}they{% endif %} is well-suited for the {{ university.program_applied }} program at {{ university.uni_name }}.
-</p>
+In addition to {{ pronoun_pos|lower }} academic pursuits, {{ app.name }} undertook a professional internship {% if app.intern_company %}at {{ app.intern_company }}{% endif %} {% if app.intern_role %}, serving as a {{ app.intern_role }}{% endif %} {% if app.intern_duration %} for {{ app.intern_duration }}{% endif %}. {% if app.intern_outcome %} {{ pronoun|lower }} {{ app.intern_outcome }}, demonstrating a capacity to apply academic knowledge in professional, high-pressure settings and to deliver measurable results. {% else %} This experience allowed {{ pronoun_obj|lower }} to complement {{ pronoun_pos|lower }} technical education with practical industry exposure, further preparing {{ pronoun_obj|lower }} for the demands of advanced study and professional practice. {% endif %}
+{% endif %} {# ── PARAGRAPH 6 · Qualities & character ── #} {% if quality %}
 
-{% if quality.recommend %}
-<p>
-I strongly recommend this applicant and am confident {% if student.gender == "Male" %}he{% elif student.gender == "Female" %}she{% else %}they{% endif %} will thrive in any rigorous academic or research environment.
-</p>
-{% endif %}
+What distinguishes {{ app.name }} beyond {{ pronoun_pos|lower }} academic and technical accomplishments is {{ pronoun_pos|lower }} character and disposition.  {% if quality.leadership %} {{ pronoun|lower }} has consistently exhibited strong leadership, {% if quality.teamwork %}paired with a genuine talent for collaboration and teamwork,{% endif %} {% if quality.hardworking %}alongside an unwavering work ethic{% endif %}. {% elif quality.hardworking %} {{ pronoun|lower }} is exceptionally hardworking and {% if quality.teamwork %}an outstanding team player{% endif %}. {% elif quality.teamwork %} {{ pronoun|lower }} excels as a team player, consistently elevating the performance of those around {{ pronoun_obj|lower }}. {% endif %} {% if quality.friendly and quality.social %} {{ pronoun_pos|lower }} warm, approachable nature and social awareness make {{ pronoun_obj|lower }} a positive presence in any collaborative environment. {% elif quality.friendly %} {{ pronoun_pos|lower }} approachable and collegial manner makes {{ pronoun_obj|lower }} easy to work with at every level. {% endif %} {% if quality.presentation %} {{ pronoun|lower }} has also shown a notable ability in {{ quality.presentation }}. {% endif %} {% if quality.quality %} Colleagues and peers frequently remark on {{ pronoun_pos|lower }} {{ quality.quality }}. {% endif %}
+{% endif %} {# ── PARAGRAPH 7 · Extracurricular & awards ── #} {% if quality.extracirricular or app.scholarships or app.competitions_won %}
 
-<p>Sincerely,</p>
-<p>
-<strong>{{ teacher.name }}</strong><br>
-{{ teacher.title }}<br>
-Department of {{ teacher.department }}<br>
-Email: {{ teacher.email }}<br>
-Phone: {{ teacher.phone }}
-</p>
+{{ app.name }}'s contributions extend well beyond academic coursework. {% if quality.extracirricular %} {{ pronoun|lower }} has been an active participant in {{ quality.extracirricular }}, demonstrating initiative and a commitment to holistic personal development. {% endif %} {% if app.scholarships %} {{ pronoun_pos|lower }} academic excellence has been formally recognised through {{ app.scholarships }}. {% endif %} {% if app.competitions_won %} Furthermore, {{ pronoun|lower }} has achieved distinction in {{ app.competitions_won }}, reflecting both competitive aptitude and the ability to perform under pressure. {% endif %}
+{% endif %} {# ── PARAGRAPH 8 · Professor's personal anecdote (optional, added later) ── #} {% if app.prof_anecdote %}
 
-</body>
-</html>"""
-    for prof in TeacherInfo.objects.all():
-        if not CustomTemplates.objects.filter(professor=prof, template_name__iexact='Default').exists():
-            CustomTemplates.objects.create(
-                template_name="Default",
-                template=default_template_content,
-                professor=prof,
-                is_default=True
-            )
+I would like to share a particular instance that encapsulates the qualities I have described above. {{ app.prof_anecdote }}
+{% endif %} {# ── PARAGRAPH 9 · Personal statement tie-in ── #} {% if app.personal_statement %}
+
+Having reviewed {{ app.name }}'s personal statement, I can affirm that the motivations and aspirations expressed therein align precisely with what I have observed firsthand. {{ pronoun_pos }} intellectual curiosity, clarity of purpose, and commitment to {{ pronoun_pos|lower }} field are evident in everything {{ pronoun|lower }} undertakes.
+{% endif %} {# ── PARAGRAPH 10 · Closing recommendation ── #} {% if university.program_applied and university.uni_name %} for the {{ university.program_applied }} program at {{ university.uni_name }}. {% elif university.program_applied %} for the {{ university.program_applied }} program. {% elif app.recommendation_purpose %} for {{ app.recommendation_purpose }}. {% else %} for further graduate study and professional advancement. {% endif %} {{ pronoun|lower }} possesses the intellectual capacity, personal integrity, and professional maturity to excel in a demanding academic environment and to make meaningful contributions to {{ pronoun_pos|lower }} chosen field. I am fully confident that {{ pronoun|lower }} will prove to be an asset to any institution fortunate enough to admit {{ pronoun_obj|lower }}.
+{# ── PARAGRAPH 11 · Contact ── #}
+
+Should you require any additional information or wish to discuss {{ app.name }}'s qualifications further, please do not hesitate to contact me directly at {{ teacher.email }} {% if teacher.phone %}or by telephone at {{ teacher.phone }}{% endif %}. I shall be happy to assist in any way I can.
+
+Yours sincerely,
+{% if teacher.images %} Professor {{ teacher.name }} {% endif %}
+
+{{ teacher.name }}
+
+{{ teacher.title }}{% if teacher.designation %}, {{ teacher.designation }}{% endif %}
+Department of {{ teacher.department.dept_name }}
+Institute of Engineering, Pulchowk Campus
+Tribhuvan University, Nepal
+{% if teacher.office_address %}Office: {{ teacher.office_address }}
+{% endif %} {% if teacher.phone %}Tel: {{ teacher.phone }}
+{% endif %} {{ teacher.email }}
+{% if deadline %}
+
+Application Deadline: {{ deadline }}
+{% endif %} 
+"""
+    # seed each professor with this default template if desired
+    for teacher in TeacherInfo.objects.all():
+        CustomTemplates.objects.update_or_create(
+            professor=teacher,
+            template_name="Default",
+            defaults={
+                'template': default_template_content,
+                'is_default': True,
+            },
+        )
+

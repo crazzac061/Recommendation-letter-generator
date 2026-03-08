@@ -5,19 +5,22 @@
 <div class="a4-preview">
     <div class="a4-paper">
         <h2 style="text-align:center;">Letter of Recommendation</h2>
-        <div style="white-space: pre-line; font-size: 16px;">
+        <!-- editable container allows professor to tweak text before downloading -->
+        <div id="letter_editable" contenteditable="true" style="white-space: pre-line; font-size: 16px;">
             {{ letter|safe }}
         </div>
     </div>
 </div>
+<!-- hidden textarea to hold the edited version when submitting -->
+<textarea id="edited_letter" name="edited_letter" style="display:none;"></textarea>
 <div style="text-align:center; margin-top:30px; display: flex; justify-content: center; gap: 20px;">
-    <form method="post" action="/download_letter/" style="display:inline;">
+    <form method="post" action="/download_letter/" id="pdfForm" style="display:inline;" onsubmit="prepareEdit()">
         {% csrf_token %}
         <input type="hidden" name="roll" value="{{student.std.roll_number}}">
         <input type="hidden" name="format" value="pdf">
         <button type="submit" class="cta-add">Download as PDF</button>
     </form>
-    <form method="post" action="/download_letter/" style="display:inline;">
+    <form method="post" action="/download_letter/" id="docxForm" style="display:inline;" onsubmit="prepareEdit()">
         {% csrf_token %}
         <input type="hidden" name="roll" value="{{student.std.roll_number}}">
         <input type="hidden" name="format" value="docx">
@@ -35,36 +38,30 @@
 }
 .a4-paper {
     width: 794px;
-    height: 1123px; /* Fixed height for A4 */
+    max-height: 1123px; /* one page height */
+    min-height: 1123px;
     background: #fff;
     box-shadow: 0 0 10px rgba(0,0,0,0.15);
     padding: 48px 60px;
-    margin: 0 auto;
+    margin: 0 auto 40px auto; /* bottom margin for page separation */
     border-radius: 4px;
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    overflow-y: auto;              /* allow scrolling when content overflows */
+    page-break-after: always;      /* ensure printed PDF breaks pages here */
 }
 </style>
 <script>
-    // var textbox= document.getElementById("textbox");
-    // var textbox1= document.getElementById("1");
-    // var textbox2= document.getElementById("2");
-    // var textbox3= document.getElementById("3");
-    var container = document.getElementById('whole_file')
-
-
-    function Exchangevalue() {
-        // var textarea= document.getElementById("textarea");
-        // textarea.value=textbox.innerText;
-        // console.log(textarea.value);
-        var textarea1 = document.getElementById("textarea1");
-        textarea1.value = container.innerText;
-        // var textarea2= document.getElementById("textarea2");
-        // textarea2.value=textbox2.innerText;
-        // var textarea3= document.getElementById("textarea3");
-        // textarea3.value=textbox3.innerText;
-    };
+    // function to copy current editable letter into hidden textarea before submitting download form
+    function prepareEdit() {
+        var editable = document.getElementById('letter_editable');
+        var hidden = document.getElementById('edited_letter');
+        if (editable && hidden) {
+            // use innerText to strip HTML tags; you may switch to innerHTML if desired
+            hidden.value = editable.innerText;
+        }
+    }
 </script>
 {% endblock body %}
